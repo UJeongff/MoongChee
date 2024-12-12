@@ -278,10 +278,14 @@ const Product = () => {
   const handleFavoriteToggle = () => {
     if (!product) return;
     const isFavorite = favoriteProducts.some((fav) => fav.id === product.id);
-    setFavoriteProducts((prev) =>
-      isFavorite ? prev.filter((fav) => fav.id !== product.id) : [product, ...prev]
-    );
+    const updatedFavorites = isFavorite
+      ? favoriteProducts.filter((fav) => fav.id !== product.id)
+      : [product, ...favoriteProducts];
+  
+    setFavoriteProducts(updatedFavorites);
+    localStorage.setItem("favoriteProducts", JSON.stringify(updatedFavorites));
   };
+  
 
   const handleChat = () => {
     setIsModalOpen(true);

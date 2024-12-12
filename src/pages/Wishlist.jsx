@@ -1,9 +1,9 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
-import { useNavigate } from "react-router-dom"; // 페이지 이동을 위한 useNavigate 훅
+import { useNavigate } from "react-router-dom";
 import { FaHeart } from "react-icons/fa";
+import axios from "axios";
 import { UserContext } from "../contexts/UserContext.jsx";
-
 
 const Container = styled.div`
   display: flex;
@@ -24,9 +24,9 @@ const Header = styled.header`
   background-color: white;
   border-bottom: 1px solid #ddd;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
-  position: sticky; /* 헤더를 고정 */
-  top: 0; /* 스크롤 시 상단에 고정 */
-  z-index: 1000; /* 다른 요소 위에 나타나도록 z-index 설정 */
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 
   .back-icon {
     font-size: 20px;
@@ -38,7 +38,7 @@ const Header = styled.header`
     font-size: 18px;
     font-weight: bold;
     color: #333;
-    margin-left: 145px; /* 뒤로가기 버튼과의 간격 */
+    margin-left: 145px;
   }
 `;
 
@@ -48,7 +48,7 @@ const ListContainer = styled.div`
   align-items: center;
   flex: 1;
   padding: 16px 0;
-  overflow-y: auto; /* 세로 스크롤 가능 */
+  overflow-y: auto;
 `;
 
 const ItemCard = styled.div`
@@ -93,7 +93,7 @@ const ItemDetails = styled.div`
     font-size: 16px;
     font-weight: bold;
     color: #333;
-    margin-bottom: 4px; /* 상품명과 가격 사이 간격 조정 */
+    margin-bottom: 4px;
   }
 
   p {
@@ -111,41 +111,70 @@ const HeartIcon = styled(FaHeart)`
 `;
 
 const Wishlist = () => {
-  const { favoriteProducts, setFavoriteProducts } = useContext(UserContext);
+  const { userInfo } = useContext(UserContext);
+  const [favoriteProducts, setFavoriteProducts] = useState([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080/api/v1";
+        const response = await axios.get(`${apiUrl}/api/v1/profile/my-like-posts`, {
+          headers: {
+            Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
+          },
+        });
+  
+        if (response.status === 200) {
+          const products = response.data.data.map((item) => ({
+            id: item.postId,
+            productName: item.name,
+            image: item.productImageUrls[0] || "/default-image.png",
+            date: item.date,
+            price: item.price,
+          }));
+          setFavoriteProducts(products);
+        }
+      } catch (error) {
+        console.error("관심 목록 데이터 불러오기 실패:", error);
+      }
+    };
+  
+    fetchFavorites();
+  }, [userInfo, setFavoriteProducts]);
+  
 
   const removeFavorite = (productId) => {
-    setFavoriteProducts(
-      favoriteProducts.filter((item) => item.id !== productId)
-    );
+    setFavoriteProducts(favoriteProducts.filter((item) => item.id !== productId));
   };
-
-  const navigate = useNavigate(); // 페이지 이동을 위한 useNavigate 훅 사용
 
   return (
     <Container>
-      {/* Header */}
       <Header>
         <div className="back-icon" onClick={() => navigate("/mypage")}>
           ←
-        </div>{" "}
-        {/* 뒤로가기 버튼 */}
+        </div>
         <h1>관심 목록</h1>
       </Header>
       <ListContainer>
-        {favoriteProducts
-          .slice()
-          .sort((a, b) => new Date(b.date) - new Date(a.date)) // 최신순 정렬
-          .map((product) => (
-            <ItemCard key={product.id}>
-              <ItemDate>{product.date}</ItemDate>
-              <ItemImage src={product.image} alt={product.productName} />
-              <ItemDetails>
-                <span>{product.productName}</span>
-                <p>{product.price}원</p>
-              </ItemDetails>
-              <HeartIcon onClick={() => removeFavorite(product.id)} />
-            </ItemCard>
-          ))}
+        {favoriteProducts.length > 0 ? (
+          favoriteProducts
+            .slice()
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+            .map((product) => (
+              <ItemCard key={product.id}>
+                <ItemDate>{product.date}</ItemDate>
+                <ItemImage src={product.image} alt={product.productName} />
+                <ItemDetails>
+                  <span>{product.productName}</span>
+                  <p>{product.price}원</p>
+                </ItemDetails>
+                <HeartIcon onClick={() => removeFavorite(product.id)} />
+              </ItemCard>
+            ))
+        ) : (
+          <p>관심 목록이 비어 있습니다.</p>
+        )}
       </ListContainer>
     </Container>
   );

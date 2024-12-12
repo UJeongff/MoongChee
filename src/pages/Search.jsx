@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../contexts/UserContext.jsx";
-
+import axios from "axios";
 
 const Container = styled.div`
   display: flex;
@@ -124,7 +124,7 @@ const TypeList = styled.div`
 `;
 
 const Search = () => {
-  const { ongoingProducts } = useContext(UserContext);
+  const { userInfo } = useContext(UserContext);
   const [keyword, setKeyword] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedType, setSelectedType] = useState(null); // 대여/판매 필터링 상태 추가
@@ -142,19 +142,46 @@ const Search = () => {
     navigate("/"); // 메인 페이지로 이동
   };
 
-  const handleSearch = () => {
-    const results = ongoingProducts
-      .filter(
-        (product) =>
-          product.status !== "거래종료" &&
-          product.productName.includes(keyword) &&
-          (!selectedCategory || product.category === selectedCategory) &&
-          (!selectedType || product.type === selectedType) // 대여/판매 필터링 추가
-      )
-      .sort((a, b) => new Date(b.date) - new Date(a.date));
+  const handleSearch = async () => {
+    const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080/api/v1";
+  
+    try {
+      const params = {};
+      if (keyword) params.name = keyword;
+      if (selectedCategory) params.keyword = categoryToKeywordMap[selectedCategory];
+      if (selectedType) params.tradeType = selectedType === "판매" ? "SALE" : "RENTAL";
+  
+      const response = await axios.get(`${apiUrl}/api/v1/posts/search`, {
+        params,
+        headers: {
+          Authorization: `Bearer ${userInfo.jwtToken.accessToken}`,
+        },
+      });
+  
+      if (response.status === 200) {
+        localStorage.setItem("searchResults", JSON.stringify(response.data.data));
+        navigate("/searchresult");
+      } else {
+        alert("검색에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("검색 에러:", error);
+      alert(`검색 중 오류가 발생했습니다: ${error.response?.data?.message || error.message}`);
+    }
+  };
+  
 
-    localStorage.setItem("searchResults", JSON.stringify(results));
-    navigate("/searchresult"); // 검색 결과 페이지로 이동
+  // 카테고리 한국어를 키워드로 매핑하는 함수
+  const categoryToKeywordMap = (category) => {
+    const categoryMap = {
+      서적: "BOOK",
+      생활용품: "NECESSITY",
+      전자제품: "ELECTRONICS",
+      의류: "CLOTH",
+      잡화: "GOODS",
+      기타: "OTHER",
+    };
+    return categoryMap[category] || null;
   };
 
   return (

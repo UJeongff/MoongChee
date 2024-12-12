@@ -2,7 +2,6 @@ import React, { useState, useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { UserContext } from "../contexts/UserContext.jsx";
-
 import Footer from "../components/Footer";
 
 const Container = styled.div`

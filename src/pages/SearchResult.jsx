@@ -5,8 +5,9 @@ import { useNavigate } from "react-router-dom";
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  width: 393px;
-  height: 852px;
+  width: 100%;
+  max-width: 393px;
+  min-height: 100vh;
   margin: 0 auto;
   padding: 0;
   background-color: white;
@@ -18,9 +19,9 @@ const Header = styled.header`
   align-items: center;
   padding: 10px;
   border-bottom: 1px solid #ddd;
-  position: sticky; /* 헤더를 고정 */
-  top: 0; /* 스크롤 시 상단에 고정 */
-  z-index: 1000; /* 다른 요소 위에 나타나도록 z-index 설정 */
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 
   .back-button {
     font-size: 20px;
@@ -41,7 +42,7 @@ const Header = styled.header`
 
 const ProductList = styled.div`
   padding: 16px;
-  overflow-y: auto; /* 세로 스크롤 가능 */
+  overflow-y: auto;
 `;
 
 const ProductCard = styled.div`
@@ -50,6 +51,7 @@ const ProductCard = styled.div`
   margin-bottom: 16px;
   border-bottom: 1px solid #ddd;
   padding-bottom: 16px;
+  cursor: pointer;
 
   .product-image {
     width: 80px;
@@ -57,40 +59,42 @@ const ProductCard = styled.div`
     background-color: #d9d9d9;
     border-radius: 8px;
     margin-right: 16px;
+    background-size: cover;
+    background-position: center;
   }
 
   .product-details {
     display: flex;
     flex-direction: column;
-    align-items: flex-start; /* 왼쪽 정렬 */
 
     .product-title {
       font-size: 16px;
       font-weight: bold;
       margin-bottom: 8px;
-      text-align: left; /* 왼쪽 정렬 */
-      width: 100%; /* 텍스트가 부모 컨테이너를 채움 */
-      white-space: nowrap; /* 한 줄로 표시 */
-      overflow: hidden; /* 넘치는 텍스트 숨김 */
-      text-overflow: ellipsis; /* 말줄임 표시 */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .product-info {
       font-size: 14px;
       color: #555;
       margin-bottom: 4px;
-      text-align: left; /* 왼쪽 정렬 */
-      width: 100%; /* 텍스트가 부모 컨테이너를 채움 */
     }
 
     .product-price {
       font-size: 14px;
       font-weight: bold;
       color: #333;
-      text-align: left; /* 왼쪽 정렬 */
-      width: 100%; /* 텍스트가 부모 컨테이너를 채움 */
     }
   }
+`;
+
+const NoResults = styled.div`
+  text-align: center;
+  margin-top: 50px;
+  font-size: 16px;
+  color: #888;
 `;
 
 const SearchResult = () => {
@@ -118,22 +122,28 @@ const SearchResult = () => {
         />
       </Header>
       <ProductList>
-        {results.map((product) => (
-          <ProductCard key={product.id}>
-            <div
-              className="product-image"
-              style={{
-                backgroundImage: `url(${product.image})`,
-                backgroundSize: "cover",
-              }}
-            />
-            <div className="product-details">
-              <span className="product-title">{product.productName}</span>
-              <span className="product-info">{product.date}</span>
-              <span className="product-price">{product.price}원</span>
-            </div>
-          </ProductCard>
-        ))}
+        {results.length > 0 ? (
+          results.map((product) => (
+            <ProductCard
+              key={product.postId}
+              onClick={() => navigate(`/product/${product.postId}`)}
+            >
+              <div
+                className="product-image"
+                style={{
+                  backgroundImage: `url(${product.productImageUrls?.[0] || "/default-image.png"})`,
+                }}
+              />
+              <div className="product-details">
+                <span className="product-title">{product.name}</span>
+                <span className="product-info">{product.date}</span>
+                <span className="product-price">{product.price}원</span>
+              </div>
+            </ProductCard>
+          ))
+        ) : (
+          <NoResults>검색 결과가 없습니다.</NoResults>
+        )}
       </ProductList>
     </Container>
   );
