@@ -1,10 +1,14 @@
-import React, { useContext, useState } from "react";
+// src/pages/ChatDetail.jsx
+
+import React, { useContext, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { UserContext } from "../contexts/UserContext.jsx";
-
 import Footer from "../components/Footer";
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 
+// Styled Components 정의
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -29,23 +33,6 @@ const Header = styled.header`
   border-bottom: 1px solid #ddd;
 `;
 
-const ChatContent = styled.div`
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
-  margin-bottom: 60px;
-  display: flex;
-  flex-direction: column;
-`;
-
-const ProductImage = styled.img`
-  width: 60px;
-  height: 60px;
-  object-fit: cover;
-  border-radius: 8px;
-  margin-right: 10px;
-`;
-
 const ChatHeader = styled.div`
   display: flex;
   align-items: center;
@@ -66,6 +53,14 @@ const ChatHeader = styled.div`
   }
 `;
 
+const ProductImage = styled.img`
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-right: 10px;
+`;
+
 const ReviewButton = styled.button`
   padding: 6px 10px;
   font-size: 12px;
@@ -74,6 +69,15 @@ const ReviewButton = styled.button`
   border: none;
   border-radius: 4px;
   cursor: pointer;
+`;
+
+const ChatContent = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  margin-bottom: 60px;
+  display: flex;
+  flex-direction: column;
 `;
 
 const MessageInputContainer = styled.div`
@@ -126,20 +130,105 @@ const MessageBubble = styled.div`
 `;
 
 const ChatDetail = () => {
-  const { id } = useParams();
+  const { id } = useParams(); // roomId
   const navigate = useNavigate();
-  const { chatData, setChatData } = useContext(UserContext);
+  const { chatData, setChatData, userInfo } = useContext(UserContext);
   const [input, setInput] = useState("");
+  const [client, setClient] = useState(null);
+
+  // 콘솔 로그 추가
+  console.log("ChatDetail id:", id);
+  console.log("currentChat:", chatData[id]);
 
   const currentChat = chatData[id];
 
+  useEffect(() => {
+    if (!currentChat || !id) {
+      console.log("Invalid chat data or id. Navigating to /chat.");
+      navigate("/chat");
+      return;
+    }
+
+    // STOMP 클라이언트 설정
+    const stompClient = new Client({
+      webSocketFactory: () => new SockJS("http://43.203.202.100:8080/ws"),
+      connectHeaders: {
+        Authorization: `Bearer ${userInfo.jwtToken.accessToken}`,
+      },
+      debug: function (str) {
+        console.log(str);
+      },
+      reconnectDelay: 5000,
+      heartbeatIncoming: 4000,
+      heartbeatOutgoing: 4000,
+    });
+
+    stompClient.onConnect = () => {
+      console.log("Connected to WebSocket");
+
+      // 채팅방 구독
+      stompClient.subscribe(`/ws/sub/chats/messages/${id}`, (message) => {
+        if (message.body) {
+          const receivedMessage = JSON.parse(message.body);
+          setChatData((prev) => ({
+            ...prev,
+            [id]: {
+              ...prev[id],
+              messages: [
+                ...prev[id].messages,
+                {
+                  sender: receivedMessage.senderId === userInfo.id ? "me" : "other",
+                  text: receivedMessage.content,
+                  time: receivedMessage.createdAt,
+                },
+              ],
+            },
+          }));
+        }
+      });
+
+      console.log("Subscribed to /ws/sub/chats/messages/", id);
+    };
+
+    stompClient.onStompError = (frame) => {
+      console.error("Broker reported error: " + frame.headers["message"]);
+      console.error("Additional details: " + frame.body);
+    };
+
+    stompClient.activate();
+    setClient(stompClient);
+
+    // Cleanup on unmount
+    return () => {
+      if (stompClient) {
+        stompClient.deactivate();
+      }
+    };
+  }, [id, currentChat, navigate, setChatData, userInfo.jwtToken.accessToken, userInfo.id]);
+
   const sendMessage = () => {
-    if (input.trim()) {
+    if (input.trim() && client && client.connected) {
+      const message = {
+        roomId: parseInt(id),
+        senderId: userInfo.id,
+        senderName: userInfo.name,
+        content: input.trim(),
+      };
+
+      client.publish({
+        destination: "/ws/pub/chats/messages",
+        body: JSON.stringify(message),
+      });
+
+      // 메시지를 로컬 상태에 추가
       setChatData((prev) => ({
         ...prev,
         [id]: {
-          ...currentChat,
-          messages: [...currentChat.messages, { sender: "me", text: input, time: new Date().toISOString() }],
+          ...prev[id],
+          messages: [
+            ...prev[id].messages,
+            { sender: "me", text: input.trim(), time: new Date().toISOString() },
+          ],
         },
       }));
       setInput("");
@@ -154,7 +243,10 @@ const ChatDetail = () => {
     <Container>
       <Header>채팅 상대: {currentChat.product?.user?.name || "사용자"}</Header>
       <ChatHeader>
-        <ProductImage src={currentChat.product?.image || "/default-image.png"} />
+        <ProductImage
+          src={currentChat.product?.image || "/default-image.png"}
+          alt={currentChat.product?.productName}
+        />
         <div className="product-info">
           <div className="product-name">
             {currentChat.product?.productName}
@@ -162,6 +254,7 @@ const ChatDetail = () => {
               onClick={() =>
                 navigate("/review", {
                   state: {
+                    productId: currentChat.product?.id, 
                     productName: currentChat.product?.productName,
                     productImage: currentChat.product?.image,
                   },
@@ -186,6 +279,11 @@ const ChatDetail = () => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="메시지를 입력하세요"
+          onKeyPress={(e) => {
+            if (e.key === "Enter") {
+              sendMessage();
+            }
+          }}
         />
         <button onClick={sendMessage}>전송</button>
       </MessageInputContainer>
@@ -193,5 +291,6 @@ const ChatDetail = () => {
     </Container>
   );
 };
+
 
 export default ChatDetail;

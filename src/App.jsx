@@ -38,7 +38,18 @@ function App() {
   return (
     <UserProvider>
       <Routes>
+        {/* 공개 라우트 */}
         <Route path="/" element={<Main />} />
+        <Route path="/search" element={<Search />} />
+        <Route path="/searchresult" element={<SearchResult />} />
+        <Route path="/wishlist" element={<Wishlist />} />
+        <Route path="/ongoing-transaction" element={<Ongoing />} />
+        <Route path="/closed-transaction" element={<Closed />} />
+        <Route path="/detail" element={<Detail />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/oauth/google/callback" element={<OAuthCallback />} />
+
+        {/* 보호된 라우트 */}
         <Route
           path="/register"
           element={
@@ -71,9 +82,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/wishlist" element={<Wishlist />} />
-        <Route path="/ongoing-transaction" element={<Ongoing />} />
-        <Route path="/closed-transaction" element={<Closed />} />
         <Route
           path="/profile"
           element={
@@ -83,21 +91,16 @@ function App() {
           }
         />
         <Route path="/edit/:id" element={<Edit />} />
-        <Route path="/search" element={<Search />} />
-        <Route path="/searchresult" element={<SearchResult />} />
         <Route path="/initialinfo" element={<Initialinfo />} />
-        <Route path="/review" element={<Review />} />
         <Route
-          path="/chat/:id"
+          path="/review/:productId"
           element={
             <ProtectedRoute>
-              <ChatDetail />
+              <Review />
             </ProtectedRoute>
           }
         />
-        <Route path="/detail" element={<Detail />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/oauth/google/callback" element={<OAuthCallback />} />
+
         <Route
           path="/reviewlist"
           element={

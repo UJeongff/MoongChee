@@ -1,9 +1,12 @@
-import React, { useState, useContext } from "react";
+// src/components/Edit.jsx
+
+import React, { useState, useContext, useEffect } from "react";
 import styled from "styled-components";
+import { useNavigate, useParams } from "react-router-dom";
+import { useAxios } from "../axiosInstance.js";
 import { UserContext } from "../contexts/UserContext.jsx";
 
-import { useNavigate, useParams } from "react-router-dom";
-
+// Styled Components (변경 없음)
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -42,18 +45,28 @@ const UploadSection = styled.section`
     height: 100px;
     border: 1px dashed #ddd;
     display: flex;
+    flex-wrap: wrap; /* 이미지가 여러 개일 경우 */
     justify-content: center;
     align-items: center;
     text-align: center;
     font-size: 12px;
     color: #555;
     cursor: pointer;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 5px;
+      margin-bottom: 5px;
+    }
   }
 `;
 
 const InputRow = styled.div`
   display: flex;
-  align-items: center;
+  flex-direction: column; /* 에러 메시지를 아래에 표시하기 위해 변경 */
   margin-bottom: 16px;
   width: 100%;
 
@@ -61,28 +74,34 @@ const InputRow = styled.div`
     font-size: 16px;
     font-weight: bold;
     color: #555;
-    margin-right: 16px;
-    min-width: 80px;
+    margin-bottom: 8px;
   }
 
   input,
   textarea {
-    flex: 1;
     border: 1px solid #ddd;
     border-radius: 5px;
     padding: 8px;
     font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   textarea {
     resize: none;
     height: 100px;
   }
+
+  .error {
+    color: red;
+    font-size: 12px;
+    margin-top: 4px;
+  }
 `;
 
 const CategorySection = styled.section`
   display: flex;
-  align-items: flex-start;
+  flex-direction: column; /* 에러 메시지를 아래에 표시하기 위해 변경 */
   width: 100%;
   margin-bottom: 16px;
 
@@ -90,8 +109,13 @@ const CategorySection = styled.section`
     font-size: 16px;
     font-weight: bold;
     color: #555;
-    margin-right: 16px;
-    min-width: 80px;
+    margin-bottom: 8px;
+  }
+
+  .error {
+    color: red;
+    font-size: 12px;
+    margin-top: 4px;
   }
 `;
 
@@ -99,7 +123,7 @@ const CategoryList = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  flex: 1;
+  width: 100%;
 
   button {
     padding: 8px 12px;
@@ -120,35 +144,43 @@ const CategoryList = styled.div`
 
 const StatusSection = styled.section`
   display: flex;
-  align-items: center;
-  margin-bottom: 16px;
+  flex-direction: column; /* 에러 메시지를 아래에 표시하기 위해 변경 */
   width: 100%;
+  margin-bottom: 16px;
 
   label {
     font-size: 16px;
     font-weight: bold;
     color: #555;
-    margin-right: 16px;
-    min-width: 80px;
+    margin-bottom: 8px;
   }
 
   div {
     display: flex;
     gap: 10px;
+    width: 100%;
+  }
 
-    button {
-      padding: 8px 12px;
-      border: none;
-      background-color: #d9d9d9;
-      border-radius: 5px;
-      font-size: 14px;
-      cursor: pointer;
+  button {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    background-color: #d9d9d9;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    height: 30px;
 
-      &.selected {
-        background-color: #555;
-        color: white;
-      }
+    &.selected {
+      background-color: #555;
+      color: white;
     }
+  }
+
+  .error {
+    color: red;
+    font-size: 12px;
+    margin-top: 4px;
   }
 `;
 
@@ -175,152 +207,217 @@ const ButtonContainer = styled.div`
   }
 
   .submit-btn {
-    background-color: #007bff;
-    color: white;
+    background-color: ${(props) => (props.disabled ? "#f0f0f0" : "#007bff")};
+    color: ${(props) => (props.disabled ? "#888" : "white")};
+    cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
   }
 `;
 
+const categoryMapping = {
+  NECESSITY: "생활용품",
+  BOOK: "서적",
+  ELECTRONICS: "전자제품",
+  CLOTH: "의류",
+  GOODS: "잡화",
+  OTHER: "기타",
+};
+
+const koreanToEnglishCategory = {
+  생활용품: "NECESSITY",
+  서적: "BOOK",
+  전자제품: "ELECTRONICS",
+  의류: "CLOTH",
+  잡화: "GOODS",
+  기타: "OTHER",
+};
+
+const statusMapping = {
+  거래가능: "ACTIVE",
+  거래중: "RESERVED",
+  거래종료: "CLOSED",
+};
+
+const englishToKoreanStatus = {
+  ACTIVE: "거래가능",
+  RESERVED: "거래중",
+  CLOSED: "거래종료",
+};
+
 const Edit = () => {
   const { id } = useParams();
-  const navigate = useNavigate(); // 상품 ID 가져오기
-  const {
-    ongoingProducts,
-    setOngoingProducts,
-    closedProducts,
-    setClosedProducts,
-  } = useContext(UserContext);
+  const navigate = useNavigate();
+  const { ongoingProducts, userInfo } = useContext(UserContext);
+  const axiosInstance = useAxios();
 
-  const product =
-    ongoingProducts.find((item) => item.id === parseInt(id)) || {};
-
+  // 상태 정의
   const [input, setInput] = useState({
-    ...product,
-    status: product.status || "거래가능",
+    productName: "",
+    keyword: "",
+    content: "",
+    date: "",
+    price: "",
+    image: null,
+    status: "거래가능",
   });
 
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [existingImageUrls, setExistingImageUrls] = useState([]);
+
+  const [checklist, setChecklist] = useState({
+    termsConfirmed: true, // Edit 페이지에서는 기본값을 true로 설정하거나 필요에 따라 변경
+  });
+
+  useEffect(() => {
+    const foundProduct = ongoingProducts.find((item) => item.id === parseInt(id));
+    if (foundProduct) {
+      setInput({
+        productName: foundProduct.productName || "",
+        keyword: categoryMapping[foundProduct.keyword] || foundProduct.keyword || "",
+        content: foundProduct.productContent || "",
+        date: foundProduct.date ? foundProduct.date.slice(0, 10) : "", // "YYYY-MM-DD" 형식으로 설정
+        price: foundProduct.price || "",
+        image: null, // 새로운 이미지를 업로드할 때만 변경
+        status: englishToKoreanStatus[foundProduct.postStatus] || "거래가능",
+      });
+      setExistingImageUrls(foundProduct.productImageUrls || []);
+    }
+  }, [id, ongoingProducts]);
+
+  // 유효성 검사 함수
+  const validate = () => {
+    const newErrors = {};
+    if (!input.productName) newErrors.productName = "상품명을 입력하세요.";
+    if (!input.keyword) newErrors.keyword = "카테고리를 선택하세요.";
+    if (!input.status) newErrors.status = "상태를 선택하세요.";
+    if (!input.price) newErrors.price = "가격을 입력하세요.";
+    // 추가적인 유효성 검사 필요 시 여기에 추가
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleCategoryClick = (category) => {
-    setInput({ ...input, category });
+    setInput({ ...input, keyword: category });
   };
 
   const handleStatusClick = (status) => {
     setInput({ ...input, status });
   };
 
-  const handleCancel = () => {
-    navigate("/ongoing-transaction");
-  };
-
-  const handleSubmit = () => {
-    if (input.status === "거래종료") {
-      // 거래종료 상태일 경우 진행중인 거래에서 제거하고 종료된 거래로 이동
-      const updatedOngoingProducts = ongoingProducts.filter(
-        (item) => item.id !== product.id
-      );
-      setOngoingProducts(updatedOngoingProducts);
-      setClosedProducts((prev) => [input, ...prev]);
-
-      // 로컬스토리지 업데이트
-      localStorage.setItem(
-        "ongoingProducts",
-        JSON.stringify(updatedOngoingProducts)
-      );
-      localStorage.setItem(
-        "closedProducts",
-        JSON.stringify([input, ...closedProducts])
-      );
-    } else {
-      // 진행중인 거래 상태 업데이트
-      const updatedOngoingProducts = ongoingProducts.map((item) =>
-        item.id === product.id ? { ...input } : item
-      );
-      setOngoingProducts(updatedOngoingProducts);
-
-      // 로컬스토리지 업데이트
-      localStorage.setItem(
-        "ongoingProducts",
-        JSON.stringify(updatedOngoingProducts)
-      );
-    }
-
-    // 상태에 따라 이동
-    navigate(
-      input.status === "거래종료"
-        ? "/closed-transaction"
-        : "/ongoing-transaction"
-    );
-  };
-
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setInput({ ...input, image: reader.result }); // Base64 이미지 저장
-      };
-      reader.readAsDataURL(file); // 파일을 Base64로 변환
+      setInput({ ...input, image: file });
     }
   };
 
-  const onChangeInput = (e) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setInput({
-      ...input,
-      [name]: value,
-    });
+    setInput({ ...input, [name]: value });
+  };
+
+  const handleSubmit = async () => {
+    try {
+      if (!validate()) {
+        return;
+      }
+      if (!checklist.termsConfirmed) {
+        alert("모든 약관에 동의해야 합니다.");
+        return;
+      }
+      setLoading(true);
+
+      const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+
+      const formData = new FormData();
+      formData.append("productName", input.productName);
+      formData.append("keyword", koreanToEnglishCategory[input.keyword]);
+      formData.append("productContent", input.content);
+      formData.append("date", input.date); // "YYYY-MM-DD" 형식으로 전송
+      formData.append("price", input.price);
+      formData.append("postStatus", statusMapping[input.status]);
+
+      // 새로운 이미지를 업로드할 경우에만 추가
+      if (input.image) {
+        formData.append("productImages", input.image);
+      }
+
+      // FormData 내용 확인 (디버깅용)
+      for (let [key, value] of formData.entries()) {
+        console.log(`${key}: ${value}`);
+      }
+
+      const response = await axiosInstance.patch(`${apiUrl}/api/v1/posts/${id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`, // 토큰 추가
+        },
+      });
+
+      if (response.status === 200) {
+        alert("상품이 성공적으로 수정되었습니다.");
+        navigate("/ongoing-transaction");
+      } else {
+        alert("상품 수정에 실패했습니다. 다시 시도해주세요.");
+      }
+    } catch (error) {
+      console.error("상품 수정 에러:", error);
+      if (error.response) {
+        console.error("서버 응답 에러:", error.response.data);
+        alert(`에러: ${error.response.data.message || "상품 수정에 실패했습니다."}`);
+      }
+    } finally {
+      setLoading(false);
+      // 필요 없다면 제거
+    }
   };
 
   return (
     <Container>
       <Header>상품 수정</Header>
       <UploadSection>
-        <div className="upload-box">
-          <label>
-            {input.image ? (
-              <img src={input.image} alt="미리보기" style={{ width: "100%" }} />
-            ) : (
-              "사진/동영상"
-            )}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileUpload}
-              style={{ display: "none" }}
-            />
-          </label>
+        <div className="upload-box" onClick={() => document.getElementById("fileInput").click()}>
+          {input.image ? (
+            <img src={URL.createObjectURL(input.image)} alt="미리보기" />
+          ) : existingImageUrls.length > 0 ? (
+            existingImageUrls.map((url, index) => (
+              <img key={index} src={url} alt={`기존 이미지 ${index + 1}`} />
+            ))
+          ) : (
+            "사진/동영상"
+          )}
+          <input
+            id="fileInput"
+            type="file"
+            accept="image/*"
+            onChange={handleFileUpload}
+            style={{ display: "none" }}
+          />
         </div>
       </UploadSection>
       <InputRow>
         <label>상품명</label>
-        <input
-          type="text"
-          name="productName"
-          value={input.productName || ""}
-          onChange={onChangeInput}
-        />
+        <input type="text" name="productName" value={input.productName} onChange={handleInputChange} />
+        {errors.productName && <span className="error">{errors.productName}</span>}
       </InputRow>
       <CategorySection>
         <h4>카테고리</h4>
         <CategoryList>
-          {["서적", "생활용품", "전자제품", "의류", "잡화", "기타"].map(
-            (category) => (
-              <button
-                key={category}
-                onClick={() => handleCategoryClick(category)}
-                className={input.category === category ? "selected" : ""}
-              >
-                {category}
-              </button>
-            )
-          )}
+          {["서적", "생활용품", "전자제품", "의류", "잡화", "기타"].map((keyword) => (
+            <button
+              key={keyword}
+              onClick={() => handleCategoryClick(keyword)}
+              className={input.keyword === keyword ? "selected" : ""}
+            >
+              {keyword}
+            </button>
+          ))}
         </CategoryList>
+        {errors.keyword && <span className="error">{errors.keyword}</span>}
       </CategorySection>
       <InputRow>
         <label>상세설명</label>
-        <textarea
-          name="content"
-          value={input.content || ""}
-          onChange={onChangeInput}
-        />
+        <textarea name="content" value={input.content} onChange={handleInputChange} />
       </InputRow>
       <StatusSection>
         <label>상태변경</label>
@@ -335,34 +432,32 @@ const Edit = () => {
             </button>
           ))}
         </div>
+        {errors.status && <span className="error">{errors.status}</span>}
       </StatusSection>
       <InputRow>
-        <label>대여 가능 날짜</label>
-        <input
-          type="date"
-          name="possibleDate"
-          value={input.possibleDate || ""}
-          onChange={onChangeInput}
-        />
+        <label>거래/반납 날짜</label>
+        <input type="date" name="date" value={input.date} onChange={handleInputChange} />
       </InputRow>
       <InputRow>
-        <label>가격</label>
-        <input
-          type="text"
-          name="price"
-          value={input.price || ""}
-          onChange={onChangeInput}
-        />
+        <label>판매/보증 금액</label>
+        <input type="number" name="price" value={input.price} onChange={handleInputChange} />
+        {errors.price && <span className="error">{errors.price}</span>}
       </InputRow>
       <ButtonContainer>
-        <button
-          className="cancel-btn"
-          onClick={() => navigate("/ongoing-transaction")}
-        >
+        <button className="cancel-btn" onClick={() => navigate("/ongoing-transaction")}>
           취소
         </button>
-        <button className="submit-btn" onClick={handleSubmit}>
-          수정
+        <button
+          className="submit-btn"
+          onClick={handleSubmit}
+          disabled={loading || !checklist.termsConfirmed}
+          style={{
+            backgroundColor: loading || !checklist.termsConfirmed ? "#f0f0f0" : "#007bff",
+            color: loading || !checklist.termsConfirmed ? "#888" : "white",
+            cursor: loading || !checklist.termsConfirmed ? "not-allowed" : "pointer",
+          }}
+        >
+          {loading ? "수정 중..." : "수정"}
         </button>
       </ButtonContainer>
     </Container>

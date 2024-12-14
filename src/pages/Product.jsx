@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { useParams, useNavigate } from "react-router-dom";
 import { UserContext } from "../contexts/UserContext.jsx";
+import axios from "axios";
 import Footer from "../components/Footer";
 
 // 스타일 컴포넌트
@@ -181,7 +182,7 @@ const Modal = styled.div`
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  display: ${(props) => (props.isOpen ? "flex" : "none")};
+  display: ${(props) => (props.$isOpen ? "flex" : "none")};
   justify-content: center;
   align-items: center;
 `;
@@ -214,7 +215,7 @@ const ToggleButton = styled.button`
   }
 
   svg {
-    transform: ${(props) => (props.isOpen ? "rotate(90deg)" : "rotate(0)")};
+    transform: ${(props) => (props.$isOpen ? "rotate(90deg)" : "rotate(0)")};
     transition: transform 0.3s ease;
   }
 `;
@@ -243,6 +244,7 @@ const Product = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { ongoingProducts, favoriteProducts, setFavoriteProducts, chatData, setChatData, reviews, userInfo, isLoggedIn } = useContext(UserContext);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   const [product, setProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -271,19 +273,54 @@ const Product = () => {
   }, [isLoggedIn, navigate]);
 
   useEffect(() => {
+    const checkIfFavorite = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+
+        const response = await axios.get(`${apiUrl}/api/v1/profile/my-like-posts`, {
+          headers: {
+            Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
+          },
+        });
+
+        const favoriteIds = response.data.data.map((item) => item.postId);
+        setIsFavorite(favoriteIds.includes(Number(id)));
+      } catch (error) {
+        console.error("관심 목록 확인 에러:", error);
+      }
+    };
+
+    checkIfFavorite();
+  }, [id, userInfo]);
+  
+
+  useEffect(() => {
     const foundProduct = ongoingProducts.find((item) => item.id === Number(id));
     setProduct(foundProduct || null);
   }, [id, ongoingProducts]);
 
-  const handleFavoriteToggle = () => {
-    if (!product) return;
-    const isFavorite = favoriteProducts.some((fav) => fav.id === product.id);
-    const updatedFavorites = isFavorite
-      ? favoriteProducts.filter((fav) => fav.id !== product.id)
-      : [product, ...favoriteProducts];
-  
-    setFavoriteProducts(updatedFavorites);
-    localStorage.setItem("favoriteProducts", JSON.stringify(updatedFavorites));
+  const handleFavoriteToggle = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080/api/v1";
+
+      if (isFavorite) {
+        await axios.delete(`${apiUrl}/api/v1/posts/${id}/like`, {
+          headers: {
+            Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
+          },
+        });
+        setIsFavorite(false);
+      } else {
+        await axios.post(`${apiUrl}/api/v1/posts/${id}/like`, {}, {
+          headers: {
+            Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
+          },
+        });
+        setIsFavorite(true);
+      }
+    } catch (error) {
+      console.error("관심 목록 토글 에러:", error);
+    }
   };
   
 
@@ -291,16 +328,40 @@ const Product = () => {
     setIsModalOpen(true);
   };
 
-  const confirmChat = () => {
+  const confirmChat = async () => {
     if (!product) return;
-    const chatId = product.id;
-    setChatData((prev) => ({
-      ...prev,
-      [chatId]: { product, messages: [] },
-    }));
-    setIsModalOpen(false);
-    navigate(`/chat/${chatId}`);
+  
+    try {
+      const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080/api/v1";
+  
+      // 채팅방 생성 API 호출
+      const response = await axios.post(
+        `${apiUrl}/chatRooms/${userInfo.id}/${product.userId}`, // user2Id로 product.userId 사용
+        null,
+        {
+          headers: {
+            Authorization: `Bearer ${userInfo.jwtToken.accessToken}`,
+          },
+        }
+      );
+  
+      if (response.status === 200) {
+        const roomId = response.data.data.roomId;
+        setChatData((prev) => ({
+          ...prev,
+          [roomId]: { product, messages: [] },
+        }));
+        setIsModalOpen(false);
+        navigate(`/chat/${roomId}`);
+      } else {
+        alert("채팅방 생성에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("채팅방 생성 에러:", error);
+      alert("채팅방 생성 중 오류가 발생했습니다.");
+    }
   };
+  
 
   const handleCheckboxChange = (e) => {
     const { name, checked } = e.target;
@@ -310,27 +371,34 @@ const Product = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080/api/v1";
-
-        const response = await fetch(`${apiUrl}/api/v1/posts/${id}`, {
+        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+        const token = userInfo?.jwtToken?.accessToken;
+  
+        const response = await axios.get(`${apiUrl}/api/v1/posts/${id}`, {
           headers: {
-            Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
+            Authorization: `Bearer ${token}`,
           },
         });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+  
+        if (response.status === 200) {
+          const productData = response.data.data;
+          setProduct(productData);
+  
+          // userId가 있는 경우에만 fetchUserReviews 호출
+          if (productData.userId) {
+            fetchUserReviews(productData.userId);
+          } else {
+            console.warn("상품 데이터에 userId가 없습니다.");
+          }
         }
-
-        const result = await response.json();
-        setProduct(result.data);
       } catch (error) {
         console.error("상품 데이터 로드 에러:", error);
       }
     };
-
+  
     fetchProduct();
   }, [id, userInfo]);
+  
 
   const getTradeTypeLabel = (tradeType) => {
     return tradeType === "RENTAL" ? "대여" : "판매";
@@ -349,7 +417,51 @@ const Product = () => {
     return keywordToCategoryMap[keyword] || "기타";
   };
   
+  const fetchUserReviews = async (userId) => {
+    if (!userId) {
+      console.error("userId가 존재하지 않습니다.");
+      return;
+    }
+  
+    try {
+      const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+      const token = userInfo?.jwtToken?.accessToken;
+  
+      const response = await axios.get(`${apiUrl}/api/v1/reviews/user/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (response.status === 200) {
+        const reviewsData = response.data.data.reviews;
+        setUserReviews(reviewsData);
+  
+        const count = reviewsData.length;
+        const average = count > 0
+          ? (reviewsData.reduce((sum, review) => sum + scoreToNumber(review.reviewScore), 0) / count).toFixed(1)
+          : "0.0";
+  
+        setReviewCount(count);
+        setAverageRating(average);
+      }
+    } catch (error) {
+      console.error("사용자 리뷰 데이터 로드 에러:", error);
+    }
+  };
+  
 
+  // reviewScore를 숫자 별점으로 변환하는 함수
+  const scoreToNumber = (score) => {
+    const mapping = {
+      ONE: 1,
+      TWO: 2,
+      THREE: 3,
+      FOUR: 4,
+      FIVE: 5,
+    };
+    return mapping[score] || 0;
+  };
 
   // "채팅 시작" 버튼 활성화 조건 - 약관 모두 확인했을 때
   const isChatEnabled = checklist.termsConfirmed;
@@ -379,8 +491,13 @@ const Product = () => {
     <Container>
       <Header>상품 상세 정보</Header>
       <ProductDetails>
-        <ProductImage src={product.productImageUrls?.[0] || "/default-image.png"} alt={product.name} />
-        <ProductHeader tradeType={product.tradeType}>
+      <ProductImage
+        src={product.productImageUrls?.[0] || "/default-image.png"}
+        alt={product.name}
+        onError={(e) => { e.target.src = "/default-image.png"; }}  // 이미지 로드 실패 시 기본 이미지로 대체
+      />
+
+        <ProductHeader $tradeType={product.tradeType}>
           <div className="name">{product.name}</div>
           <div className="type">{getTradeTypeLabel(product.tradeType)}</div>
         </ProductHeader>
@@ -409,23 +526,20 @@ const Product = () => {
             1:1 채팅
           </button>
           <button className="heart-btn" onClick={handleFavoriteToggle}>
-            {favoriteProducts.some((fav) => fav.id === product.id) ? (
-              <span className="heart">❤️</span>
-            ) : (
-              <span className="empty-heart">🤍</span>
-            )}
+            {isFavorite ? <span className="heart">❤️</span> : <span className="empty-heart">🤍</span>}
           </button>
         </ButtonContainer>
+
         <BackButton onClick={() => navigate("/")}>목록으로 돌아가기</BackButton>
       </ProductDetails>
       <Footer />
 
-      <Modal isOpen={isModalOpen}>
+      <Modal $isOpen={isModalOpen}>
         <ModalContent>
           <h4>1:1 채팅 전 확인 사항</h4>
           <TermsSection>
             <ToggleButton
-              isOpen={activeTerms.term1}
+              $isOpen={activeTerms.term1}
               onClick={() => toggleTermsContent("term1")}
             >
               <span>1. 대여 상품 미반납 시 약관</span>
@@ -444,7 +558,7 @@ const Product = () => {
           </TermsSection>
           <TermsSection>
             <ToggleButton
-              isOpen={activeTerms.term2}
+              $isOpen={activeTerms.term2}
               onClick={() => toggleTermsContent("term2")}
             >
               <span>2. 대여 시 상품 파손에 관한 약관</span>

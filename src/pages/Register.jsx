@@ -266,7 +266,7 @@ const Register = () => {
     keyword: "",
     type: "",
     content: "",
-    date: new Date().toISOString().slice(0, 16), // "YYYY-MM-DDTHH:MM"
+    date: new Date().toISOString().slice(0, 10), // "YYYY-MM-DDTHH:MM"
     price: "",
   });
 
@@ -490,7 +490,7 @@ const Register = () => {
       <InputRow>
         <label>거래/반납 날짜</label>
         <input
-          type="datetime-local"
+          type="date" 
           name="date"
           value={input.date}
           onChange={onChangeInput}

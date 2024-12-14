@@ -1,6 +1,7 @@
-import React, { useState, useContext } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useState, useContext, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import axios from "axios";
 import { UserContext } from "../contexts/UserContext.jsx";
 import Footer from "../components/Footer";
 
@@ -101,39 +102,78 @@ const SubmitButton = styled.button`
 `;
 
 const Review = () => {
-  const location = useLocation();
+  const { productId } = useParams();
   const navigate = useNavigate();
-  const { reviews, setReviews } = useContext(UserContext);
+  const { userInfo, ongoingProducts, fetchUserProfile } = useContext(UserContext);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [product, setProduct] = useState(null);
 
-  const { productId, productName, productImage } = location.state || {};
+  // 상품 정보 가져오기
+  useEffect(() => {
+    const selectedProduct = ongoingProducts.find((item) => item.id === parseInt(productId));
+    setProduct(selectedProduct);
+  }, [productId, ongoingProducts]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!rating || !comment.trim()) {
       alert("별점과 후기를 모두 입력해주세요.");
       return;
     }
 
-    const newReview = {
-      productId, // 상품 ID 추가
-      rating,
-      comment,
+    const reviewData = {
+      reviewScore: ratingToEnum(rating),
+      reviewContent: comment.trim(),
     };
 
-    const updatedReviews = [...reviews, newReview];
-    setReviews(updatedReviews);
-    localStorage.setItem("reviews", JSON.stringify(updatedReviews)); // 로컬 스토리지 저장
-    navigate("/mypage");
+    console.log("Sending review data:", reviewData);
+
+    try {
+      const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+      const token = userInfo?.jwtToken?.accessToken;
+
+      const response = await axios.post(`${apiUrl}/api/v1/reviews/${productId}`, reviewData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 201) {
+        alert("리뷰 작성이 완료되었습니다!");
+        await fetchUserProfile(); // 사용자 프로필 정보 새로고침
+        navigate("/mypage");
+      }
+    } catch (error) {
+      if (error.response) {
+        console.error("Error response data:", error.response.data);
+        console.error("Error response status:", error.response.status);
+        alert(`리뷰 작성 중 오류가 발생했습니다: ${error.response.data.message || error.message}`);
+      } else {
+        console.error("Error:", error.message);
+        alert("리뷰 작성 중 알 수 없는 오류가 발생했습니다.");
+      }
+    }
+  };
+
+  // rating을 reviewScore enum으로 변환
+  const ratingToEnum = (rating) => {
+    const mapping = {
+      1: "ONE",
+      2: "TWO",
+      3: "THREE",
+      4: "FOUR",
+      5: "FIVE",
+    };
+    return mapping[rating];
   };
 
   return (
     <Container>
       <Header>리뷰 작성</Header>
       <ReviewHeader>
-        <ProductImage src={productImage || "/default-image.png"} alt="상품 이미지" />
+        <ProductImage src={product?.image || "/default-image.png"} alt="상품 이미지" />
         <div className="product-info">
-          <div className="product-name">{productName}</div>
+          <div className="product-name">{product?.productName || "상품명"}</div>
         </div>
       </ReviewHeader>
       <ReviewContent>

@@ -1,10 +1,11 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
 import { UserContext } from "../contexts/UserContext.jsx";
-
+import axios from "axios";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import DefaultProfile from "./assets/images/DefaultProfile.png";
 
 const Container = styled.div`
   display: flex;
@@ -44,12 +45,61 @@ const InfoCard = styled.div`
   }
 `;
 
+const ProfileImage = styled.img`
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 16px;
+`;
+
 const ProfileOther = () => {
   const { state } = useLocation();
-  const { ongoingProducts, reviews } = useContext(UserContext);
   const navigate = useNavigate();
+  const { userInfo } = useContext(UserContext);
+
+  const [profileData, setProfileData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const userId = state?.userId;
+
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      if (!userId) return;
+
+      try {
+        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+        const token = userInfo?.jwtToken?.accessToken;
+
+        const response = await axios.get(`${apiUrl}/api/v1/profile/details/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.status === 200) {
+          setProfileData(response.data.data);
+        }
+      } catch (error) {
+        console.error("프로필 데이터 페칭 에러:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, [userId, userInfo]);
+
+  // department Enum을 텍스트로 변환하는 함수
+  const departmentMapping = {
+    SW: "소프트웨어전공",
+    AI: "인공지능전공",
+    COMPUTER_SCIENCE: "컴퓨터공학과",
+    INDUSTRIAL_ENGINEERING: "산업공학과",
+    VISUAL_DESIGN: "시각디자인학과",
+    BUSINESS: "경영학과",
+    ECONOMICS: "경제학과",
+  };
 
   if (!userId) {
     return (
@@ -64,40 +114,34 @@ const ProfileOther = () => {
     );
   }
 
-  // 해당 사용자의 제품 및 리뷰 정보
-  const userProducts = ongoingProducts.filter((product) => product.userId === userId);
-  const userReviews = reviews.filter((review) => review.targetUserId === userId);
-
-  const userInfo = userProducts[0]?.user || {
-    name: "홍길동",
-    email: "unknown@example.com",
-    department: "정보 없음",
-  };
-
   return (
     <Container>
       <Header>사용자 정보</Header>
       <Content>
-        <InfoCard>
-          <div className="label">이름</div>
-          <div className="value">{userInfo.name}</div>
-        </InfoCard>
-        <InfoCard>
-          <div className="label">이메일</div>
-          <div className="value">{userInfo.email}</div>
-        </InfoCard>
-        <InfoCard>
-          <div className="label">학과</div>
-          <div className="value">{userInfo.department}</div>
-        </InfoCard>
-        <InfoCard>
-          <div className="label">등록된 상품 수</div>
-          <div className="value">{userProducts.length}</div>
-        </InfoCard>
-        <InfoCard>
-          <div className="label">리뷰 수</div>
-          <div className="value">{userReviews.length}</div>
-        </InfoCard>
+        {loading ? (
+          <p>로딩 중...</p>
+        ) : profileData ? (
+          <>
+            <ProfileImage
+              src={profileData.profileImageUrl || DefaultProfile}
+              alt="프로필 이미지"
+            />
+            <InfoCard>
+              <div className="label">이름</div>
+              <div className="value">{profileData.name}</div>
+            </InfoCard>
+            <InfoCard>
+              <div className="label">이메일</div>
+              <div className="value">{profileData.email}</div>
+            </InfoCard>
+            <InfoCard>
+              <div className="label">학과</div>
+              <div className="value">{departmentMapping[profileData.department] || "정보 없음"}</div>
+            </InfoCard>
+          </>
+        ) : (
+          <p>사용자 정보를 불러올 수 없습니다.</p>
+        )}
       </Content>
       <Footer />
     </Container>

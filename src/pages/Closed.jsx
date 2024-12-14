@@ -1,8 +1,8 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import styled from "styled-components";
-import { useNavigate } from "react-router-dom"; // 페이지 이동을 위한 useNavigate 훅
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import { UserContext } from "../contexts/UserContext.jsx";
-
 
 const Container = styled.div`
   display: flex;
@@ -23,9 +23,9 @@ const Header = styled.header`
   background-color: white;
   border-bottom: 1px solid #ddd;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
-  position: sticky; /* 헤더를 고정 */
-  top: 0; /* 스크롤 시 상단에 고정 */
-  z-index: 1000; /* 다른 요소 위에 나타나도록 z-index 설정 */
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 
   .back-icon {
     font-size: 20px;
@@ -37,7 +37,7 @@ const Header = styled.header`
     font-size: 18px;
     font-weight: bold;
     color: #333;
-    margin-left: 135px; /* 뒤로가기 버튼과의 간격 */
+    margin-left: 135px;
   }
 `;
 
@@ -57,7 +57,6 @@ const ItemCard = styled.div`
   width: 342px;
   height: 183px;
   background-color: white;
-  align-items: center;
   justify-content: space-between;
   border: 1px solid #ddd;
   border-radius: 10px;
@@ -79,7 +78,7 @@ const ItemImage = styled.img`
   height: 113px;
   border-radius: 8px;
   object-fit: cover;
-  margin-top: 10px; /* 이미지 위치를 살짝 아래로 조정 */
+  margin-top: 10px;
 `;
 
 const TransactionStatus = styled.div`
@@ -88,12 +87,12 @@ const TransactionStatus = styled.div`
   align-items: center;
   width: 85px;
   height: 27px;
-  background-color: #d9d9d9; /* 배경 색상 */
-  color: white; /* 텍스트 색상 */
-  font-size: 12px; /* 텍스트 크기 */
+  background-color: #d9d9d9;
+  color: white;
+  font-size: 12px;
   font-weight: bold;
-  border-radius: 8px; /* 코너 반경 */
-  margin-top: 10px; /* 도형과 가격 간의 간격 */
+  border-radius: 8px;
+  margin-top: 10px;
 `;
 
 const ItemDetails = styled.div`
@@ -101,7 +100,7 @@ const ItemDetails = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  margin-left: 10px; /* 텍스트를 이미지와 더 가까이 배치 */
+  margin-left: 10px;
   flex: 1;
 
   span {
@@ -117,37 +116,77 @@ const ItemDetails = styled.div`
   }
 `;
 
+const NoDataMessage = styled.div`
+  font-size: 16px;
+  color: #777;
+  margin-top: 50px;
+  text-align: center;
+`;
+
 const Closed = () => {
-  const { closedProducts } = useContext(UserContext);
-  const navigate = useNavigate(); // 페이지 이동을 위한 useNavigate 훅 사용
+  const { closedProducts, setClosedProducts, userInfo } = useContext(UserContext);
+  const navigate = useNavigate();
+
+  // 종료된 거래 데이터 불러오기
+  useEffect(() => {
+    const fetchClosedProducts = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+        const token = userInfo?.jwtToken?.accessToken;
+
+        const response = await axios.get(`${apiUrl}/api/v1/profile/my-closed-posts`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.status === 200) {
+          const products = response.data.data.map((item) => ({
+            id: item.postId,
+            productName: item.name,
+            image: item.productImageUrls?.[0] || "/default-image.png",
+            price: item.rentalPrice,
+            date: item.createdAt,
+          }));
+
+          setClosedProducts(products);
+        }
+      } catch (error) {
+        console.error("종료된 거래 데이터 불러오기 실패:", error);
+      }
+    };
+
+    fetchClosedProducts();
+  }, [setClosedProducts, userInfo]);
 
   return (
     <Container>
-      {/* Header */}
       <Header>
         <div className="back-icon" onClick={() => navigate("/mypage")}>
           ←
-        </div>{" "}
-        {/* 뒤로가기 버튼 */}
+        </div>
         <h1>종료된 거래</h1>
       </Header>
 
-      {/* List */}
       <ListContainer>
-        {closedProducts
-          .slice()
-          .sort((a, b) => new Date(b.date) - new Date(a.date)) // 최신순 정렬
-          .map((product) => (
-            <ItemCard key={product.id}>
-              <ItemDate>{product.date}</ItemDate>
-              <ItemImage src={product.image} alt={product.productName} />
-              <ItemDetails>
-                <span>{product.productName}</span>
-                <p>{product.price}</p>
-              </ItemDetails>
-              <TransactionStatus>거래종료</TransactionStatus>
-            </ItemCard>
-          ))}
+        {closedProducts.length > 0 ? (
+          closedProducts
+            .slice()
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+            .map((product) => (
+              <ItemCard key={product.id}>
+                <ItemDate>{new Date(product.date).toLocaleDateString()}</ItemDate>
+                <ItemImage src={product.image} alt={product.productName} />
+                <ItemDetails>
+                  <span>{product.productName}</span>
+                  <p>{product.price}원</p>
+                </ItemDetails>
+                <TransactionStatus>거래종료</TransactionStatus>
+              </ItemCard>
+            ))
+        ) : (
+          <NoDataMessage>종료된 거래가 없습니다.</NoDataMessage>
+        )}
       </ListContainer>
     </Container>
   );

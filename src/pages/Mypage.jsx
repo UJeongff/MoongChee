@@ -137,29 +137,7 @@ const Footer = styled.footer`
 
 const Mypage = () => {
   const nav = useNavigate();
-  const {
-    userInfo,
-    reviews,
-    ongoingProducts,
-  } = useContext(UserContext);
-
-  // 내가 등록한 상품 필터링
-  const myProducts = ongoingProducts.filter(
-    (product) => product.userId === userInfo?.id
-  );
-
-  // 내가 등록한 상품에 대한 리뷰 필터링
-  const myReviews = reviews.filter((review) =>
-    myProducts.some((product) => product.id === review.targetProductId)
-  );
-
-  // 평균 별점 계산
-  const averageRating = myReviews.length
-    ? (
-        myReviews.reduce((sum, review) => sum + review.rating, 0) /
-        myReviews.length
-      ).toFixed(1)
-    : "0.0";
+  const { userInfo } = useContext(UserContext);
 
   const profileImageUrl = userInfo?.profileImageUrl || DefaultProfile;
 
@@ -172,24 +150,18 @@ const Mypage = () => {
             src={profileImageUrl}
             alt="프로필"
             className="profile-image"
-            onClick={() => nav("/profile")} // 프로필 이미지를 클릭하면 프로필 페이지로 이동
+            onClick={() => nav("/profile")}
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = DefaultProfile;
             }}
           />
           <div className="profile-info">
-            <span
-              className="nickname"
-              onClick={() => nav("/profile")} // 닉네임 클릭 시 프로필 페이지로 이동
-            >
+            <span className="nickname" onClick={() => nav("/profile")}>
               {userInfo?.name || "홍길동"}
             </span>
-            <span
-              className="rating"
-              onClick={() => nav("/reviewlist")} // 별점 및 후기 갯수를 클릭하면 ViewList 페이지로 이동
-            >
-              ⭐ {averageRating} | 후기 {myReviews.length}
+            <span className="rating" onClick={() => nav("/reviewlist")}>
+              ⭐ {userInfo?.averageScore || "0.0"} | 후기 {userInfo?.reviewCount || 0}
             </span>
           </div>
         </div>
@@ -199,30 +171,15 @@ const Mypage = () => {
       </ProfileSection>
       <TransactionSection>
         <h4>나의 거래</h4>
-        <div
-          className="transaction-item"
-          onClick={() => {
-            nav("/wishlist"); // 관심목록 페이지로 이동
-          }}
-        >
+        <div className="transaction-item" onClick={() => nav("/wishlist")}>
           <span>❤️ 관심목록</span>
           <span>▶</span>
         </div>
-        <div
-          className="transaction-item"
-          onClick={() => {
-            nav("/ongoing-transaction"); // 진행 중 거래 페이지로 이동
-          }}
-        >
+        <div className="transaction-item" onClick={() => nav("/ongoing-transaction")}>
           <span>📑 진행중인 거래</span>
           <span>▶</span>
         </div>
-        <div
-          className="transaction-item"
-          onClick={() => {
-            nav("/closed-transaction"); // 종료된 거래 페이지로 이동
-          }}
-        >
+        <div className="transaction-item" onClick={() => nav("/closed-transaction")}>
           <span>🛍️ 종료된 거래</span>
           <span>▶</span>
         </div>
@@ -231,10 +188,7 @@ const Mypage = () => {
         <div className="footer-icon" onClick={() => nav("/chat")}>
           💬
         </div>
-        <div
-          className="footer-icon"
-          onClick={() => nav("/")} // 홈으로 이동
-        >
+        <div className="footer-icon" onClick={() => nav("/")}>
           🏠
         </div>
         <div className="footer-icon">👤</div>

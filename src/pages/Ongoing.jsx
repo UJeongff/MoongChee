@@ -1,7 +1,8 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../contexts/UserContext.jsx";
+import axios from "axios";
 
 const Container = styled.div`
   display: flex;
@@ -22,9 +23,9 @@ const Header = styled.header`
   background-color: white;
   border-bottom: 1px solid #ddd;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
-  position: sticky; /* 헤더를 고정 */
-  top: 0; /* 스크롤 시 상단에 고정 */
-  z-index: 1000; /* 다른 요소 위에 나타나도록 z-index 설정 */
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 
   .back-icon {
     font-size: 20px;
@@ -36,7 +37,7 @@ const Header = styled.header`
     font-size: 18px;
     font-weight: bold;
     color: #333;
-    margin-left: 135px;
+    margin-left: 120px;
   }
 `;
 
@@ -46,7 +47,7 @@ const ListContainer = styled.div`
   align-items: center;
   flex: 1;
   padding: 16px 0;
-  overflow-y: auto; /* 세로 스크롤 가능 */
+  overflow-y: auto;
 `;
 
 const ItemCard = styled.div`
@@ -56,7 +57,6 @@ const ItemCard = styled.div`
   width: 342px;
   height: 183px;
   background-color: white;
-  align-items: center;
   justify-content: space-between;
   border: 1px solid #ddd;
   border-radius: 10px;
@@ -121,9 +121,9 @@ const ItemDetails = styled.div`
     font-size: 16px;
     font-weight: bold;
     color: #333;
-    white-space: nowrap; /* 줄바꿈 방지 */
-    overflow: hidden; /* 넘치는 텍스트 숨김 */
-    text-overflow: ellipsis; /* 말줄임 표시 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   p {
@@ -134,16 +134,39 @@ const ItemDetails = styled.div`
 `;
 
 const Ongoing = () => {
-  const { ongoingProducts } = useContext(UserContext);
+  const { userInfo } = useContext(UserContext);
+  const [ongoingProducts, setOngoingProducts] = useState([]);
   const navigate = useNavigate();
 
-  const handleEdit = (id) => {
-    navigate(`/edit/${id}`); // 수정 페이지로 이동
-  };
+  // 진행 중인 거래 데이터 가져오기
+  useEffect(() => {
+    const fetchActivePosts = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL;
+        const response = await axios.get(`${apiUrl}/api/v1/profile/my-active-posts`, {
+          headers: {
+            Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
+          },
+        });
 
-  const availableProducts = ongoingProducts.filter(
-    (item) => item.status === "ACTIVE"
-  );
+        if (response.status === 200) {
+          const products = response.data.data.map((item) => ({
+            id: item.postId,
+            productName: item.name,
+            image: item.productImageUrls?.[0] || "/default-image.png",
+            date: item.date || item.createdAt.split("T")[0],
+            price: item.rentalPrice || 0,
+            status: item.postStatus,
+          }));
+          setOngoingProducts(products);
+        }
+      } catch (error) {
+        console.error("진행 중인 거래 데이터 불러오기 실패:", error);
+      }
+    };
+
+    fetchActivePosts();
+  }, [userInfo]);
 
   return (
     <Container>
@@ -155,22 +178,19 @@ const Ongoing = () => {
       </Header>
 
       <ListContainer>
-        {availableProducts.length === 0 ? (
+        {ongoingProducts.length === 0 ? (
           <p>진행중인 거래가 없습니다.</p>
         ) : (
-          availableProducts.map((item) => (
+          ongoingProducts.map((item) => (
             <ItemCard key={item.id}>
               <ItemDate>{item.date}</ItemDate>
               <EditIcon onClick={() => navigate(`/edit/${item.id}`)}>✏️</EditIcon>
-              <ItemImage
-                src={item.image || "/default-image.png"}
-                alt={item.productName}
-              />
+              <ItemImage src={item.image} alt={item.productName} />
               <ItemDetails>
                 <span>{item.productName}</span>
                 <p>{item.price}원</p>
               </ItemDetails>
-              <TransactionStatus>{item.status}</TransactionStatus>
+              <TransactionStatus>{item.status === "ACTIVE" ? "거래가능" : item.status}</TransactionStatus>
             </ItemCard>
           ))
         )}

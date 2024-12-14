@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { FaHeart } from "react-icons/fa";
@@ -62,6 +62,7 @@ const ItemCard = styled.div`
   border-radius: 8px;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
   width: 342px;
+  cursor: pointer;
 `;
 
 const ItemDate = styled.div`
@@ -111,20 +112,20 @@ const HeartIcon = styled(FaHeart)`
 `;
 
 const Wishlist = () => {
-  const { userInfo } = useContext(UserContext);
-  const [favoriteProducts, setFavoriteProducts] = useState([]);
+  const { favoriteProducts, setFavoriteProducts, userInfo } = useContext(UserContext);
   const navigate = useNavigate();
 
+  // 관심 상품 데이터를 백엔드에서 가져오는 함수
   useEffect(() => {
     const fetchFavorites = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080/api/v1";
+        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
         const response = await axios.get(`${apiUrl}/api/v1/profile/my-like-posts`, {
           headers: {
             Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
           },
         });
-  
+
         if (response.status === 200) {
           const products = response.data.data.map((item) => ({
             id: item.postId,
@@ -139,14 +140,22 @@ const Wishlist = () => {
         console.error("관심 목록 데이터 불러오기 실패:", error);
       }
     };
-  
-    fetchFavorites();
-  }, [userInfo, setFavoriteProducts]);
-  
 
+    fetchFavorites();
+  }, [setFavoriteProducts, userInfo]);
+
+  // 하트 아이콘 클릭 시 관심 상품 제거
   const removeFavorite = (productId) => {
-    setFavoriteProducts(favoriteProducts.filter((item) => item.id !== productId));
+    const updatedFavorites = favoriteProducts.filter((item) => item.id !== productId);
+    setFavoriteProducts(updatedFavorites);
+    localStorage.setItem("favoriteProducts", JSON.stringify(updatedFavorites));
   };
+
+  // 상세 페이지로 이동하는 함수
+  const handleNavigateToDetail = (productId) => {
+    navigate(`/product/${productId}`);
+  };
+
 
   return (
     <Container>
@@ -161,21 +170,22 @@ const Wishlist = () => {
           favoriteProducts
             .slice()
             .sort((a, b) => new Date(b.date) - new Date(a.date))
-            .map((product) => (
-              <ItemCard key={product.id}>
+            .map((product, index) => (
+              <ItemCard key={product.id || index} onClick={() => handleNavigateToDetail(product.id)}>
                 <ItemDate>{product.date}</ItemDate>
                 <ItemImage src={product.image} alt={product.productName} />
                 <ItemDetails>
                   <span>{product.productName}</span>
                   <p>{product.price}원</p>
                 </ItemDetails>
-                <HeartIcon onClick={() => removeFavorite(product.id)} />
+                <HeartIcon onClick={(e) => { e.stopPropagation(); removeFavorite(product.id); }} />
               </ItemCard>
             ))
         ) : (
           <p>관심 목록이 비어 있습니다.</p>
         )}
       </ListContainer>
+
     </Container>
   );
 };

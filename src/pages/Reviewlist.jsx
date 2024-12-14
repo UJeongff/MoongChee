@@ -1,7 +1,7 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import styled from "styled-components";
 import { UserContext } from "../contexts/UserContext.jsx";
-
+import axios from "axios";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
@@ -48,6 +48,14 @@ const ReviewCard = styled.div`
     font-size: 14px;
     color: #666;
   }
+
+  .image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 8px;
+  }
 `;
 
 const NoReviews = styled.div`
@@ -58,30 +66,51 @@ const NoReviews = styled.div`
 `;
 
 const ReviewList = () => {
-  const { userInfo, reviews, ongoingProducts } = useContext(UserContext);
+  const { userInfo, reviews, setReviews } = useContext(UserContext);
 
-  // 내가 등록한 상품 필터링
-  const myProducts = ongoingProducts.filter(
-    (product) => product.userId === userInfo?.id
-  );
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+        const token = userInfo?.jwtToken?.accessToken;
 
-  // 내가 등록한 상품에 대한 리뷰 필터링
-  const myReviews = reviews.filter((review) =>
-    myProducts.some((product) => product.id === review.targetProductId)
-  );
+        const response = await axios.get(`${apiUrl}/api/v1/reviews/user`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.status === 200) {
+          setReviews(response.data.data.reviews);
+        }
+      } catch (error) {
+        console.error("리뷰 데이터 페칭 에러:", error);
+      }
+    };
+
+    fetchReviews();
+  }, [setReviews, userInfo]);
 
   return (
     <Container>
       <Header title="내 리뷰" />
       <Content>
-        {myReviews.length > 0 ? (
-          myReviews.map((review) => (
-            <ReviewCard key={review.id}>
-              <div className="title">상품: {review.productName}</div>
-              <div className="rating">별점: ⭐ {review.rating}</div>
-              <div className="content">{review.content}</div>
+        {reviews.length > 0 ? (
+          reviews.map((review, index) => (
+            <ReviewCard key={review.id || index}>
+              <div className="title">리뷰 대상: {review.revieweeName}</div>
+              <img
+                className="image"
+                src={review.productImageUrls?.[0] || "/default-image.png"}
+                alt="상품 이미지"
+              />
+              <div className="rating">별점: ⭐ {review.reviewScore}</div>
+              <div className="content">{review.reviewContent}</div>
+              <div className="date">작성일: {new Date(review.createdAt).toLocaleDateString()}</div>
             </ReviewCard>
           ))
+          
+          
         ) : (
           <NoReviews>작성된 리뷰가 없습니다.</NoReviews>
         )}
