@@ -48,7 +48,8 @@ const InputGroup = styled.div`
     margin-bottom: 8px;
   }
 
-  input {
+  input,
+  select {
     padding: 8px;
     font-size: 14px;
     border: 1px solid #ddd;
@@ -61,6 +62,7 @@ const InputGroup = styled.div`
     margin-top: 4px;
   }
 `;
+
 
 const ImagePreview = styled.img`
   width: 100px;
@@ -289,14 +291,19 @@ const InitialInfo = () => {
         </InputGroup>
         <InputGroup>
           <label>학과</label>
-          <input
-            type="text"
-            name="department"
-            value={form.department}
-            onChange={handleChange}
-          />
+          <select name="department" value={form.department} onChange={handleChange}>
+            <option value="">학과를 선택해주세요</option>
+            <option value="SW">소프트웨어전공</option>
+            <option value="AI">인공지능전공</option>
+            <option value="COMPUTER_SCIENCE">컴퓨터공학과</option>
+            <option value="INDUSTRIAL_ENGINEERING">산업공학과</option>
+            <option value="VISUAL_DESIGN">시각디자인학과</option>
+            <option value="BUSINESS">경영학과</option>
+            <option value="ECONOMICS">경제학과</option>
+          </select>
           {errors.department && <div className="error">{errors.department}</div>}
         </InputGroup>
+
         <InputGroup>
           <label>학번</label>
           <input

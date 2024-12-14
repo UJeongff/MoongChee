@@ -44,6 +44,17 @@ const InfoCard = styled.div`
   }
 `;
 
+const departmentMap = {
+  SW: "소프트웨어전공",
+  AI: "인공지능전공",
+  COMPUTER_SCIENCE: "컴퓨터공학과",
+  INDUSTRIAL_ENGINEERING: "산업공학과",
+  VISUAL_DESIGN: "시각디자인학과",
+  BUSINESS: "경영학과",
+  ECONOMICS: "경제학과",
+};
+
+
 const Profile = () => {
   const { userInfo, setUserInfo, isLoggedIn } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
@@ -126,15 +137,21 @@ const Profile = () => {
     );
   }
 
+  const getDepartmentName = (department) => {
+    return departmentMap[department] || "학과를 입력해주세요";
+  };
+  
+
   // 기본값을 제공하는 profileData 정의
   const profileData = {
     name: userInfo?.name || "홍길동",
     email: userInfo?.email || "이메일을 입력해주세요",
     phone: userInfo?.phoneNumber || "전화번호를 입력해주세요",
     birthDate: userInfo?.birthday || "생년월일을 입력해주세요",
-    department: userInfo?.department || "학과를 입력해주세요",
+    department: getDepartmentName(userInfo?.department),
     studentId: userInfo?.studentNumber || "학번을 입력해주세요",
   };
+  
 
   return (
     <Container>
