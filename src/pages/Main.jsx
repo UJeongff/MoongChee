@@ -136,24 +136,29 @@ const Main = () => {
   useEffect(() => {
     const getProducts = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080/api/v1";
+        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
     
-        const response = await axios.get(`${apiUrl}/api/v1/posts`, {
+        const response = await axiosInstance.get(`${apiUrl}/api/v1/posts`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
         });
+        
     
-        if (response.status === 200) {
-          console.log("상품 데이터:", response.data);
+        if (response.status === 200 && Array.isArray(response.data.data)) {
+          setOngoingProducts(response.data.data);
+        } else {
+          console.error("응답 데이터가 배열이 아닙니다:", response.data);
         }
+        
       } catch (error) {
         console.error("상품 데이터 페칭 에러:", error);
       }
     };
+    
 
     getProducts();
-  }, [axiosInstance, setOngoingProducts]);
+  }, [setOngoingProducts]);
 
   useEffect(() => {
     console.log("ongoingProducts:", ongoingProducts); // 디버깅 로그
@@ -174,17 +179,17 @@ const Main = () => {
         ) : (
           ongoingProducts.map((product) => (
             <ItemCard
-              key={product.id}
-              onClick={() => navigate(`/product/${product.id}`)} // 상세 페이지로 이동
+              key={product.postId} // 'postId'를 키로 사용
+              onClick={() => navigate(`/product/${product.postId}`)}
             >
               <ItemImage
-                src={product.image ? product.image : "/default-image.png"}
-                alt={product.productName}
+                src={product.productImageUrls || "/default-image.png"}
+                alt={product.productName || "상품 이미지"}
               />
+
               <ItemDetails>
-                {/* 상품명과 대여/판매 정보를 중앙 정렬 */}
                 <div className="title-row">
-                  <span className="product-name">{product.productName}</span>
+                  <span className="product-name">{product.name}</span>
                   <span className={`type ${product.tradeType}`}>
                     {product.tradeType === "SALE" ? "판매" : "대여"}
                   </span>
@@ -194,6 +199,7 @@ const Main = () => {
               </ItemDetails>
             </ItemCard>
           ))
+          
         )}
       </ItemList>
       <RegisterButton onClick={() => navigate("/register")}>

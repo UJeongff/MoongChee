@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { UserContext } from "../contexts/UserContext.jsx";
 import axios from "axios";
 import Footer from "../components/Footer";
@@ -54,14 +54,12 @@ const ProfileImage = styled.img`
 `;
 
 const ProfileOther = () => {
-  const { state } = useLocation();
+  const { userId } = useParams();
   const navigate = useNavigate();
   const { userInfo } = useContext(UserContext);
 
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  const userId = state?.userId;
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -90,7 +88,6 @@ const ProfileOther = () => {
     fetchProfileData();
   }, [userId, userInfo]);
 
-  // department Enum을 텍스트로 변환하는 함수
   const departmentMapping = {
     SW: "소프트웨어전공",
     AI: "인공지능전공",

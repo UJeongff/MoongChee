@@ -121,19 +121,21 @@ export const UserProvider = ({ children }) => {
       console.warn("사용자 정보 또는 액세스 토큰이 없습니다.");
       return;
     }
-
+  
     try {
       const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
-
+  
       const response = await axios.get(`${apiUrl}/api/v1/posts`, {
         headers: {
           Authorization: `Bearer ${userInfo.jwtToken.accessToken}`,
         },
       });
-
+  
       if (response.status === 200) {
         const products = response.data.data.map((item) => ({
           id: item.postId,
+          postId: item.postId,
+          userId: item.userId, // userId 추가
           authorName: item.authorName,
           tradeType: item.tradeType,
           productName: item.name,
@@ -149,12 +151,13 @@ export const UserProvider = ({ children }) => {
       }
     } catch (error) {
       console.error("상품 데이터 페칭 에러:", error);
-
+  
       if (error.response && error.response.status === 401) {
         resetUserInfo();
       }
     }
   };
+  
 
   // 사용자 정보 변경 시 프로필 및 상품 데이터 페칭
   useEffect(() => {

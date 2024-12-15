@@ -148,7 +148,7 @@ const Ongoing = () => {
             Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
           },
         });
-
+    
         if (response.status === 200) {
           const products = response.data.data.map((item) => ({
             id: item.postId,
@@ -164,6 +164,7 @@ const Ongoing = () => {
         console.error("진행 중인 거래 데이터 불러오기 실패:", error);
       }
     };
+    
 
     fetchActivePosts();
   }, [userInfo]);

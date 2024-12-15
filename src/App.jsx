@@ -1,5 +1,3 @@
-// src/App.jsx
-
 import "./App.css";
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
@@ -24,13 +22,14 @@ import Login from "./pages/Login";
 import OAuthCallback from "./pages/OAuthCallback";
 import ReviewList from "./pages/Reviewlist";
 import ProfileOther from "./pages/ProfileOther";
+import OtherReviewList from "./pages/OtherReviewList"; // Import 추가
 
-import { UserProvider, UserContext } from "./contexts/UserContext.jsx"; // UserContext 임포트
+import { UserProvider, UserContext } from "./contexts/UserContext.jsx";
 import { useContext } from "react";
 
-// ProtectedRoute 컴포넌트 정의
 const ProtectedRoute = ({ children }) => {
   const { isLoggedIn } = useContext(UserContext);
+  console.log("isLoggedIn:", isLoggedIn);
   return isLoggedIn ? children : <Navigate to="/login" />;
 };
 
@@ -38,7 +37,6 @@ function App() {
   return (
     <UserProvider>
       <Routes>
-        {/* 공개 라우트 */}
         <Route path="/" element={<Main />} />
         <Route path="/search" element={<Search />} />
         <Route path="/searchresult" element={<SearchResult />} />
@@ -49,7 +47,6 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/oauth/google/callback" element={<OAuthCallback />} />
 
-        {/* 보호된 라우트 */}
         <Route
           path="/register"
           element={
@@ -100,7 +97,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/reviewlist"
           element={
@@ -110,10 +106,19 @@ function App() {
           }
         />
         <Route
-          path="/profileother/:id"
+          path="/profileother/:userId"
           element={
             <ProtectedRoute>
               <ProfileOther />
+            </ProtectedRoute>
+          }
+        />
+        {/* 새로운 라우트 추가 */}
+        <Route
+          path="/otherreviews/:userId"
+          element={
+            <ProtectedRoute>
+              <OtherReviewList />
             </ProtectedRoute>
           }
         />

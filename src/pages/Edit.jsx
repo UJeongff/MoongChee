@@ -269,20 +269,25 @@ const Edit = () => {
   });
 
   useEffect(() => {
+    console.log("Ongoing Products:", ongoingProducts); // 데이터 확인
     const foundProduct = ongoingProducts.find((item) => item.id === parseInt(id));
+    console.log("Found Product:", foundProduct); // 선택된 상품 확인
+  
     if (foundProduct) {
       setInput({
         productName: foundProduct.productName || "",
         keyword: categoryMapping[foundProduct.keyword] || foundProduct.keyword || "",
         content: foundProduct.productContent || "",
-        date: foundProduct.date ? foundProduct.date.slice(0, 10) : "", // "YYYY-MM-DD" 형식으로 설정
+        date: foundProduct.date ? foundProduct.date.slice(0, 10) : "",
         price: foundProduct.price || "",
-        image: null, // 새로운 이미지를 업로드할 때만 변경
+        image: null,
         status: englishToKoreanStatus[foundProduct.postStatus] || "거래가능",
       });
-      setExistingImageUrls(foundProduct.productImageUrls || []);
+      setExistingImageUrls(foundProduct.productImageUrls || [foundProduct.image]);
     }
   }, [id, ongoingProducts]);
+  
+  
 
   // 유효성 검사 함수
   const validate = () => {
@@ -318,60 +323,59 @@ const Edit = () => {
 
   const handleSubmit = async () => {
     try {
-      if (!validate()) {
-        return;
-      }
+      if (!validate()) return;
       if (!checklist.termsConfirmed) {
         alert("모든 약관에 동의해야 합니다.");
         return;
       }
       setLoading(true);
-
+  
       const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
-
+  
       const formData = new FormData();
-      formData.append("productName", input.productName);
+      formData.append("name", input.productName);
       formData.append("keyword", koreanToEnglishCategory[input.keyword]);
       formData.append("productContent", input.content);
-      formData.append("date", input.date); // "YYYY-MM-DD" 형식으로 전송
-      formData.append("price", input.price);
+      formData.append("date", `${input.date}T00:00:00.000`);
+      formData.append("price", parseFloat(input.price));
       formData.append("postStatus", statusMapping[input.status]);
-
-      // 새로운 이미지를 업로드할 경우에만 추가
+  
+      // 이미지가 변경되었을 때만 파일 추가
       if (input.image) {
         formData.append("productImages", input.image);
+      } else if (existingImageUrls.length > 0) {
+        // 기존 이미지 URL을 다시 전송 (백엔드에서 URL로 처리가 가능한 경우)
+        existingImageUrls.forEach((url) => formData.append("productImageUrls", url));
       }
-
-      // FormData 내용 확인 (디버깅용)
+  
+      console.log("FormData Entries:");
       for (let [key, value] of formData.entries()) {
-        console.log(`${key}: ${value}`);
+        console.log(`${key}:`, value);
       }
-
+  
       const response = await axiosInstance.patch(`${apiUrl}/api/v1/posts/${id}`, formData, {
         headers: {
+          Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
           "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`, // 토큰 추가
         },
       });
-
+  
       if (response.status === 200) {
         alert("상품이 성공적으로 수정되었습니다.");
         navigate("/ongoing-transaction");
-      } else {
-        alert("상품 수정에 실패했습니다. 다시 시도해주세요.");
       }
     } catch (error) {
       console.error("상품 수정 에러:", error);
       if (error.response) {
         console.error("서버 응답 에러:", error.response.data);
-        alert(`에러: ${error.response.data.message || "상품 수정에 실패했습니다."}`);
+        alert(`에러 메시지: ${error.response.data.message || "상품 수정에 실패했습니다."}`);
       }
     } finally {
       setLoading(false);
-      // 필요 없다면 제거
     }
   };
-
+  
+  
   return (
     <Container>
       <Header>상품 수정</Header>
@@ -381,7 +385,12 @@ const Edit = () => {
             <img src={URL.createObjectURL(input.image)} alt="미리보기" />
           ) : existingImageUrls.length > 0 ? (
             existingImageUrls.map((url, index) => (
-              <img key={index} src={url} alt={`기존 이미지 ${index + 1}`} />
+              <img
+                key={index}
+                src={url}
+                alt={`기존 이미지 ${index + 1}`}
+                onError={(e) => { e.target.src = "/default-image.png"; }} // 기본 이미지로 대체
+              />
             ))
           ) : (
             "사진/동영상"
@@ -395,6 +404,7 @@ const Edit = () => {
           />
         </div>
       </UploadSection>
+
       <InputRow>
         <label>상품명</label>
         <input type="text" name="productName" value={input.productName} onChange={handleInputChange} />

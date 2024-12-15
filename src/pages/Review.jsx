@@ -1,9 +1,9 @@
 import React, { useState, useContext, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
-import axios from "axios";
 import { UserContext } from "../contexts/UserContext.jsx";
 import Footer from "../components/Footer";
+import axios from "axios";
 
 const Container = styled.div`
   display: flex;
@@ -102,18 +102,50 @@ const SubmitButton = styled.button`
 `;
 
 const Review = () => {
-  const { productId } = useParams();
   const navigate = useNavigate();
-  const { userInfo, ongoingProducts, fetchUserProfile } = useContext(UserContext);
+  const { userInfo } = useContext(UserContext);
+  const { reviews, setReviews } = useContext(UserContext);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
-  const [product, setProduct] = useState(null);
+  const { productId } = useParams();
+  const [productInfo, setProductInfo] = useState({
+    productName: "",
+    productImage: "",
+  });
 
-  // 상품 정보 가져오기
   useEffect(() => {
-    const selectedProduct = ongoingProducts.find((item) => item.id === parseInt(productId));
-    setProduct(selectedProduct);
-  }, [productId, ongoingProducts]);
+    const fetchProductInfo = async () => {
+      if (!productId) {
+        console.error("productId가 undefined입니다.");
+        return;
+      }
+
+      try {
+        const apiUrl = "http://43.203.202.100:8080/api/v1";
+        const response = await axios.get(`${apiUrl}/posts/${productId}`, {
+          headers: {
+            Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.status === 200) {
+          const data = response.data.data;
+          setProductInfo({
+            productName: data.name,
+            productImage: data.productImageUrls?.[0] || "/default-image.png",
+          });
+        }
+      } catch (error) {
+        console.error("상품 정보 로드 에러:", error);
+        alert("상품 정보를 가져오는 중 오류가 발생했습니다.");
+        navigate("/"); // 오류 발생 시 홈으로 이동
+      }
+    };
+
+    fetchProductInfo();
+    console.log("productId:", productId);
+  }, [productId, userInfo, navigate]);
 
   const handleSubmit = async () => {
     if (!rating || !comment.trim()) {
@@ -121,59 +153,61 @@ const Review = () => {
       return;
     }
 
-    const reviewData = {
-      reviewScore: ratingToEnum(rating),
-      reviewContent: comment.trim(),
-    };
-
-    console.log("Sending review data:", reviewData);
+    const apiUrl = "http://43.203.202.100:8080/api/v1";
+    const reviewScoreEnum = ["ONE", "TWO", "THREE", "FOUR", "FIVE"];
 
     try {
-      const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
-      const token = userInfo?.jwtToken?.accessToken;
+      const formData = new FormData();
+      // 서버가 requestDTO 키를 요구하므로 JSON 데이터를 문자열로 추가
+      formData.append(
+        "requestDTO",
+        JSON.stringify({
+          reviewScore: reviewScoreEnum[rating - 1],
+          reviewContent: comment,
+        })
+      );
 
-      const response = await axios.post(`${apiUrl}/api/v1/reviews/${productId}`, reviewData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.post(
+        `${apiUrl}/reviews/${productId}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       if (response.status === 201) {
-        alert("리뷰 작성이 완료되었습니다!");
-        await fetchUserProfile(); // 사용자 프로필 정보 새로고침
+        alert("리뷰가 성공적으로 작성되었습니다.");
         navigate("/mypage");
       }
     } catch (error) {
+      console.error("리뷰 작성 에러:", error);
+
       if (error.response) {
-        console.error("Error response data:", error.response.data);
-        console.error("Error response status:", error.response.status);
-        alert(`리뷰 작성 중 오류가 발생했습니다: ${error.response.data.message || error.message}`);
+        console.error("서버 응답 데이터:", error.response.data);
+        alert(
+          `리뷰 작성 실패: ${
+            error.response.data?.message || "알 수 없는 오류입니다."
+          }`
+        );
       } else {
-        console.error("Error:", error.message);
-        alert("리뷰 작성 중 알 수 없는 오류가 발생했습니다.");
+        alert("리뷰 작성 요청 중 오류가 발생했습니다.");
       }
     }
-  };
-
-  // rating을 reviewScore enum으로 변환
-  const ratingToEnum = (rating) => {
-    const mapping = {
-      1: "ONE",
-      2: "TWO",
-      3: "THREE",
-      4: "FOUR",
-      5: "FIVE",
-    };
-    return mapping[rating];
   };
 
   return (
     <Container>
       <Header>리뷰 작성</Header>
       <ReviewHeader>
-        <ProductImage src={product?.image || "/default-image.png"} alt="상품 이미지" />
+        <ProductImage
+          src={productInfo.productImage || "/default-image.png"}
+          alt="상품 이미지"
+        />
         <div className="product-info">
-          <div className="product-name">{product?.productName || "상품명"}</div>
+          <div className="product-name">{productInfo.productName}</div>
         </div>
       </ReviewHeader>
       <ReviewContent>
