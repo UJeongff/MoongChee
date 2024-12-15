@@ -331,20 +331,19 @@ const Edit = () => {
       setLoading(true);
   
       const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+      const patchUrl = `${apiUrl}/api/v1/posts/${id}`;
   
       const formData = new FormData();
       formData.append("name", input.productName);
       formData.append("keyword", koreanToEnglishCategory[input.keyword]);
       formData.append("productContent", input.content);
-      formData.append("date", `${input.date}T00:00:00.000`);
-      formData.append("price", parseFloat(input.price));
+      formData.append("date", input.date);
+      formData.append("price", input.price);
       formData.append("postStatus", statusMapping[input.status]);
   
-      // 이미지가 변경되었을 때만 파일 추가
       if (input.image) {
         formData.append("productImages", input.image);
       } else if (existingImageUrls.length > 0) {
-        // 기존 이미지 URL을 다시 전송 (백엔드에서 URL로 처리가 가능한 경우)
         existingImageUrls.forEach((url) => formData.append("productImageUrls", url));
       }
   
@@ -353,10 +352,9 @@ const Edit = () => {
         console.log(`${key}:`, value);
       }
   
-      const response = await axiosInstance.patch(`${apiUrl}/api/v1/posts/${id}`, formData, {
+      const response = await axiosInstance.patch(patchUrl, formData, {
         headers: {
           Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
-          "Content-Type": "multipart/form-data",
         },
       });
   
@@ -373,8 +371,7 @@ const Edit = () => {
     } finally {
       setLoading(false);
     }
-  };
-  
+  };  
   
   return (
     <Container>

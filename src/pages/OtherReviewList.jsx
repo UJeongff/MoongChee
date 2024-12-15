@@ -96,22 +96,22 @@ const OtherReviewList = () => {
 
   return (
     <Container>
-      <h3>상대방 리뷰</h3>
+      <h3>{reviews.length > 0 ? `${reviews[0].revieweeName} 리뷰` : "상대방 리뷰"}</h3>
       {loading ? (
         <p>리뷰 로딩 중...</p>
       ) : reviews.length > 0 ? (
         reviews.map((review, index) => (
           <ReviewCard key={review.id || index}>
-            <div className="title">리뷰 대상: {review.revieweeName}</div>
-            <div className="rating">별점: {convertRatingToStars(review.reviewScore)}</div>
+            <div className="rating">{convertRatingToStars(review.reviewScore)}</div>
             <div className="content">{review.reviewContent}</div>
-            <div className="date">작성일: {new Date(review.createdAt).toLocaleDateString()}</div>
+            <div className="date">{new Date(review.createdAt).toLocaleDateString()}</div>
           </ReviewCard>
         ))
       ) : (
         <NoReviews>작성된 리뷰가 없습니다.</NoReviews>
       )}
     </Container>
+
   );
 };
 

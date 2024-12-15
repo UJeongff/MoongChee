@@ -385,11 +385,12 @@ const Product = () => {
       const buyerId = userInfo.id;
       const sellerId = product.userId;
   
-      console.log(`POST 요청 URL: ${apiUrl}/api/v1/chatRooms/${buyerId}/${sellerId}`);
+      console.log(`POST 요청 URL: ${apiUrl}/api/v1/chatRooms`);
+      console.log(`요청 본문:`, { user1Id: buyerId, user2Id: sellerId });
   
       const response = await axios.post(
-        `${apiUrl}/api/v1/chatRooms/${buyerId}/${sellerId}`,
-        {}, // 요청 본문이 필요 없으면 빈 객체 전달
+        `${apiUrl}/api/v1/chatRooms`,
+        { user1Id: buyerId, user2Id: sellerId },  // 올바른 request body
         {
           headers: {
             Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
@@ -407,9 +408,7 @@ const Product = () => {
       console.error("채팅방 생성 에러:", error.response?.data || error.message);
       alert(error.response?.data?.message || "채팅방 생성 중 오류가 발생했습니다.");
     }
-  };
-  
-  
+  };  
 
   const confirmChat = () => {
     if (!product) return;

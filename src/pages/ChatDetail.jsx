@@ -7,7 +7,6 @@ import { UserContext } from "../contexts/UserContext.jsx";
 import Footer from "../components/Footer";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
-import axios from "axios";
 
 // Styled Components 정의
 const Container = styled.div`
@@ -131,177 +130,94 @@ const MessageBubble = styled.div`
 `;
 
 const ChatDetail = () => {
-  const { id: productId } = useParams(); // 상품 ID
+  const { id: roomId } = useParams();
+  const { userInfo } = useContext(UserContext);
   const navigate = useNavigate();
-  const { userInfo, setChatData } = useContext(UserContext);
   const [client, setClient] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const [roomId, setRoomId] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // 채팅방 확인 및 생성 함수
-  const checkOrCreateChatRoom = async () => {
-    try {
-      const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
-      const sellerId = 1; // 예제에서는 고정된 값, 실제로는 상품 정보에서 가져와야 함
-      const buyerId = userInfo.id;
+  useEffect(() => {
+    if (!roomId) return;
 
-      // 채팅방 존재 확인
-      const checkResponse = await axios.get(`${apiUrl}/api/v1/chatRooms/${sellerId}/${buyerId}`, {
-        headers: {
-          Authorization: `Bearer ${userInfo.jwtToken.accessToken}`,
-        },
-      });
-
-      if (checkResponse.data.data && checkResponse.data.data.roomId !== -1) {
-        setRoomId(checkResponse.data.data.roomId);
-        connectToWebSocket(checkResponse.data.data.roomId);
-      } else {
-        // 채팅방 생성
-        const createResponse = await axios.post(
-          `${apiUrl}/api/v1/chatRooms/${sellerId}/${buyerId}`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${userInfo.jwtToken.accessToken}`,
-            },
-          }
-        );
-        setRoomId(createResponse.data.data.roomId);
-        connectToWebSocket(createResponse.data.data.roomId);
-      }
-    } catch (error) {
-      console.error("채팅방 확인/생성 에러:", error.response?.data || error.message);
-      alert("채팅방 확인 또는 생성 중 오류가 발생했습니다.");
-      navigate("/chat");
-    }
-  };
-
-  const fetchChatHistory = async (roomId, page = 0, size = 20) => {
-    try {
-      const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
-  
-      const response = await axios.get(`${apiUrl}/api/v1/chats/chatting/${roomId}/${page}/${size}`, {
-        headers: {
-          Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
-        },
-      });
-  
-      if (response.status === 200) {
-        const chatMessages = response.data.data.chatMessageList;
-        setMessages(chatMessages);
-      } else {
-        alert("채팅 내역을 불러오는 데 실패했습니다.");
-      }
-    } catch (error) {
-      console.error("채팅 내역 조회 에러:", error.response?.data || error.message);
-      alert("채팅 내역을 불러오는 중 오류가 발생했습니다.");
-    }
-  };
-  
-
-  // WebSocket 연결 함수
-  const connectToWebSocket = (roomId) => {
+    const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
     const stompClient = new Client({
-      webSocketFactory: () => new SockJS("http://43.203.202.100:8080/ws"),
+      webSocketFactory: () => new SockJS(`${apiUrl}/ws`),
       connectHeaders: {
         Authorization: `Bearer ${userInfo.jwtToken.accessToken}`,
       },
-      debug: (str) => console.log(str),
-      reconnectDelay: 5000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
+      onConnect: () => {
+        console.log("WebSocket connected");
+        setLoading(false);
+        stompClient.subscribe(`/ws/sub/chats/messages/${roomId}`, (message) => {
+          if (message.body) {
+            const receivedMessage = JSON.parse(message.body);
+            setMessages((prev) => [
+              ...prev,
+              {
+                sender: receivedMessage.senderId === userInfo.id ? "me" : "other",
+                text: receivedMessage.content,
+              },
+            ]);
+          }
+        });
+      },
+      onStompError: (frame) => {
+        console.error("WebSocket error:", frame);
+        alert("WebSocket 연결에 실패했습니다.");
+        navigate("/chat");
+      },
     });
-
-    stompClient.onConnect = () => {
-      console.log("Connected to WebSocket");
-
-      // 채팅방 구독
-      stompClient.subscribe(`/ws/sub/chats/messages/${roomId}`, (message) => {
-        if (message.body) {
-          const receivedMessage = JSON.parse(message.body);
-          setMessages((prev) => [
-            ...prev,
-            {
-              sender: receivedMessage.senderId === userInfo.id ? "me" : "other",
-              text: receivedMessage.content,
-              time: receivedMessage.createdAt,
-            },
-          ]);
-        }
-      });
-
-      console.log("Subscribed to /ws/sub/chats/messages/", roomId);
-    };
-
-    stompClient.onStompError = (frame) => {
-      console.error("Broker reported error: " + frame.headers["message"]);
-      console.error("Additional details: " + frame.body);
-    };
 
     stompClient.activate();
     setClient(stompClient);
-  };
 
-  useEffect(() => {
-    checkOrCreateChatRoom();
-  }, []);
+    return () => {
+      stompClient.deactivate();
+    };
+  }, [roomId, userInfo, navigate]);
 
-  const sendMessage = (roomId, senderId, senderName, content) => {
-    if (stompClient && stompClient.connected) {
-      const message = {
-        roomId,
-        senderId,
-        senderName,
-        content,
-      };
-      stompClient.send("/ws/pub/chats/messages", {}, JSON.stringify(message));
+  const sendMessage = () => {
+    if (client && input.trim()) {
+      try {
+        client.publish({
+          destination: "/ws/pub/chats/messages",
+          body: JSON.stringify({ roomId, senderId: userInfo.id, content: input }),
+        });
+        setInput("");
+      } catch (error) {
+        console.error("메시지 전송 에러:", error);
+        alert("메시지 전송에 실패했습니다.");
+      }
     }
   };
-  
-  useEffect(() => {
-    const socket = new SockJS(`${apiUrl}/ws`);
-    stompClient = Stomp.over(socket);
-  
-    stompClient.connect({}, () => {
-      stompClient.subscribe(`/ws/sub/chats/${roomId}`, (message) => {
-        const newMessage = JSON.parse(message.body);
-        setMessages((prev) => [newMessage, ...prev]);
-      });
-    });
-  
-    return () => {
-      if (stompClient) {
-        stompClient.disconnect();
-      }
-    };
-  }, [roomId]);
-  
 
   return (
     <Container>
       <Header>채팅방</Header>
-      <ChatContent>
-        {messages.map((msg, index) => (
-          <MessageBubble key={index} sender={msg.sender}>
-            {msg.text}
-          </MessageBubble>
-        ))}
-      </ChatContent>
-      <MessageInputContainer>
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="메시지를 입력하세요"
-          onKeyPress={(e) => {
-            if (e.key === "Enter") {
-              sendMessage();
-            }
-          }}
-        />
-        <button onClick={sendMessage}>전송</button>
-      </MessageInputContainer>
+      {loading ? (
+        <Loading>Loading...</Loading>
+      ) : (
+        <>
+          <ChatContent>
+            {messages.map((msg, index) => (
+              <MessageBubble key={index} sender={msg.sender}>
+                {msg.text}
+              </MessageBubble>
+            ))}
+          </ChatContent>
+          <MessageInputContainer>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="메시지를 입력하세요"
+            />
+            <button onClick={sendMessage}>전송</button>
+          </MessageInputContainer>
+        </>
+      )}
       <Footer />
     </Container>
   );

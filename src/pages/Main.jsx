@@ -194,8 +194,8 @@ const Main = () => {
                     {product.tradeType === "SALE" ? "판매" : "대여"}
                   </span>
                 </div>
-                <p>{product.price}원</p>
-                <p>{product.date}</p>
+                <p>금액 : {product.price}원</p>
+                <p>{new Date(product.createdAt).toLocaleDateString()}</p>
               </ItemDetails>
             </ItemCard>
           ))
