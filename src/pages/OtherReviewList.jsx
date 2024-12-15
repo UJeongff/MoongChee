@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import styled from "styled-components";
 import axios from "axios";
-import { useParams } from "react-router-dom"; // useParams 가져오기
+import { useParams } from "react-router-dom";
 import { UserContext } from "../contexts/UserContext.jsx";
 
 const Container = styled.div`
@@ -47,6 +47,20 @@ const NoReviews = styled.div`
   color: #888;
 `;
 
+// 별점 문자열을 숫자로 변환하는 함수
+const convertRatingToStars = (rating) => {
+  const ratingMap = {
+    one: 1,
+    two: 2,
+    three: 3,
+    four: 4,
+    five: 5,
+  };
+
+  const starsCount = ratingMap[rating.toLowerCase()] || 0;
+  return "⭐".repeat(starsCount);
+};
+
 const OtherReviewList = () => {
   const { userId } = useParams();
   const { userInfo } = useContext(UserContext);
@@ -89,7 +103,7 @@ const OtherReviewList = () => {
         reviews.map((review, index) => (
           <ReviewCard key={review.id || index}>
             <div className="title">리뷰 대상: {review.revieweeName}</div>
-            <div className="rating">별점: ⭐ {review.reviewScore}</div>
+            <div className="rating">별점: {convertRatingToStars(review.reviewScore)}</div>
             <div className="content">{review.reviewContent}</div>
             <div className="date">작성일: {new Date(review.createdAt).toLocaleDateString()}</div>
           </ReviewCard>

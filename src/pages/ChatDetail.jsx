@@ -7,6 +7,7 @@ import { UserContext } from "../contexts/UserContext.jsx";
 import Footer from "../components/Footer";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
+import axios from "axios";
 
 // Styled Components 정의
 const Container = styled.div`
@@ -130,34 +131,83 @@ const MessageBubble = styled.div`
 `;
 
 const ChatDetail = () => {
-  const { id } = useParams(); // roomId
+  const { id: productId } = useParams(); // 상품 ID
   const navigate = useNavigate();
-  const { chatData, setChatData, userInfo } = useContext(UserContext);
-  const [input, setInput] = useState("");
+  const { userInfo, setChatData } = useContext(UserContext);
   const [client, setClient] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [roomId, setRoomId] = useState(null);
 
-  // 콘솔 로그 추가
-  console.log("ChatDetail id:", id);
-  console.log("currentChat:", chatData[id]);
+  // 채팅방 확인 및 생성 함수
+  const checkOrCreateChatRoom = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+      const sellerId = 1; // 예제에서는 고정된 값, 실제로는 상품 정보에서 가져와야 함
+      const buyerId = userInfo.id;
 
-  const currentChat = chatData[id];
+      // 채팅방 존재 확인
+      const checkResponse = await axios.get(`${apiUrl}/api/v1/chatRooms/${sellerId}/${buyerId}`, {
+        headers: {
+          Authorization: `Bearer ${userInfo.jwtToken.accessToken}`,
+        },
+      });
 
-  useEffect(() => {
-    if (!currentChat || !id) {
-      console.log("Invalid chat data or id. Navigating to /chat.");
+      if (checkResponse.data.data && checkResponse.data.data.roomId !== -1) {
+        setRoomId(checkResponse.data.data.roomId);
+        connectToWebSocket(checkResponse.data.data.roomId);
+      } else {
+        // 채팅방 생성
+        const createResponse = await axios.post(
+          `${apiUrl}/api/v1/chatRooms/${sellerId}/${buyerId}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${userInfo.jwtToken.accessToken}`,
+            },
+          }
+        );
+        setRoomId(createResponse.data.data.roomId);
+        connectToWebSocket(createResponse.data.data.roomId);
+      }
+    } catch (error) {
+      console.error("채팅방 확인/생성 에러:", error.response?.data || error.message);
+      alert("채팅방 확인 또는 생성 중 오류가 발생했습니다.");
       navigate("/chat");
-      return;
     }
+  };
 
-    // STOMP 클라이언트 설정
+  const fetchChatHistory = async (roomId, page = 0, size = 20) => {
+    try {
+      const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+  
+      const response = await axios.get(`${apiUrl}/api/v1/chats/chatting/${roomId}/${page}/${size}`, {
+        headers: {
+          Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
+        },
+      });
+  
+      if (response.status === 200) {
+        const chatMessages = response.data.data.chatMessageList;
+        setMessages(chatMessages);
+      } else {
+        alert("채팅 내역을 불러오는 데 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("채팅 내역 조회 에러:", error.response?.data || error.message);
+      alert("채팅 내역을 불러오는 중 오류가 발생했습니다.");
+    }
+  };
+  
+
+  // WebSocket 연결 함수
+  const connectToWebSocket = (roomId) => {
     const stompClient = new Client({
       webSocketFactory: () => new SockJS("http://43.203.202.100:8080/ws"),
       connectHeaders: {
         Authorization: `Bearer ${userInfo.jwtToken.accessToken}`,
       },
-      debug: function (str) {
-        console.log(str);
-      },
+      debug: (str) => console.log(str),
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
@@ -167,27 +217,21 @@ const ChatDetail = () => {
       console.log("Connected to WebSocket");
 
       // 채팅방 구독
-      stompClient.subscribe(`/ws/sub/chats/messages/${id}`, (message) => {
+      stompClient.subscribe(`/ws/sub/chats/messages/${roomId}`, (message) => {
         if (message.body) {
           const receivedMessage = JSON.parse(message.body);
-          setChatData((prev) => ({
+          setMessages((prev) => [
             ...prev,
-            [id]: {
-              ...prev[id],
-              messages: [
-                ...prev[id].messages,
-                {
-                  sender: receivedMessage.senderId === userInfo.id ? "me" : "other",
-                  text: receivedMessage.content,
-                  time: receivedMessage.createdAt,
-                },
-              ],
+            {
+              sender: receivedMessage.senderId === userInfo.id ? "me" : "other",
+              text: receivedMessage.content,
+              time: receivedMessage.createdAt,
             },
-          }));
+          ]);
         }
       });
 
-      console.log("Subscribed to /ws/sub/chats/messages/", id);
+      console.log("Subscribed to /ws/sub/chats/messages/", roomId);
     };
 
     stompClient.onStompError = (frame) => {
@@ -197,77 +241,48 @@ const ChatDetail = () => {
 
     stompClient.activate();
     setClient(stompClient);
-
-    // Cleanup on unmount
-    return () => {
-      if (stompClient) {
-        stompClient.deactivate();
-      }
-    };
-  }, [id, currentChat, navigate, setChatData, userInfo.jwtToken.accessToken, userInfo.id]);
-
-  const sendMessage = () => {
-    if (input.trim() && client && client.connected) {
-      const message = {
-        roomId: parseInt(id),
-        senderId: userInfo.id,
-        senderName: userInfo.name,
-        content: input.trim(),
-      };
-
-      client.publish({
-        destination: "/ws/pub/chats/messages",
-        body: JSON.stringify(message),
-      });
-
-      // 메시지를 로컬 상태에 추가
-      setChatData((prev) => ({
-        ...prev,
-        [id]: {
-          ...prev[id],
-          messages: [
-            ...prev[id].messages,
-            { sender: "me", text: input.trim(), time: new Date().toISOString() },
-          ],
-        },
-      }));
-      setInput("");
-    }
   };
 
-  if (!currentChat) {
-    return <div>채팅 데이터를 찾을 수 없습니다.</div>;
-  }
+  useEffect(() => {
+    checkOrCreateChatRoom();
+  }, []);
+
+  const sendMessage = (roomId, senderId, senderName, content) => {
+    if (stompClient && stompClient.connected) {
+      const message = {
+        roomId,
+        senderId,
+        senderName,
+        content,
+      };
+      stompClient.send("/ws/pub/chats/messages", {}, JSON.stringify(message));
+    }
+  };
+  
+  useEffect(() => {
+    const socket = new SockJS(`${apiUrl}/ws`);
+    stompClient = Stomp.over(socket);
+  
+    stompClient.connect({}, () => {
+      stompClient.subscribe(`/ws/sub/chats/${roomId}`, (message) => {
+        const newMessage = JSON.parse(message.body);
+        setMessages((prev) => [newMessage, ...prev]);
+      });
+    });
+  
+    return () => {
+      if (stompClient) {
+        stompClient.disconnect();
+      }
+    };
+  }, [roomId]);
+  
 
   return (
     <Container>
-      <Header>채팅 상대: {currentChat.product?.user?.name || "사용자"}</Header>
-      <ChatHeader>
-        <ProductImage
-          src={currentChat.product?.image || "/default-image.png"}
-          alt={currentChat.product?.productName}
-        />
-        <div className="product-info">
-          <div className="product-name">
-            {currentChat.product?.productName}
-            <ReviewButton
-              onClick={() =>
-                navigate("/review", {
-                  state: {
-                    productId: currentChat.product?.id, 
-                    productName: currentChat.product?.productName,
-                    productImage: currentChat.product?.image,
-                  },
-                })
-              }
-            >
-              후기쓰기
-            </ReviewButton>
-          </div>
-        </div>
-      </ChatHeader>
+      <Header>채팅방</Header>
       <ChatContent>
-        {currentChat.messages.map((msg, index) => (
+        {messages.map((msg, index) => (
           <MessageBubble key={index} sender={msg.sender}>
             {msg.text}
           </MessageBubble>
@@ -291,6 +306,5 @@ const ChatDetail = () => {
     </Container>
   );
 };
-
 
 export default ChatDetail;

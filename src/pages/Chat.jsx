@@ -98,19 +98,17 @@ const Chat = () => {
       try {
         const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
         console.log(`Fetching chat list from: ${apiUrl}/api/v1/chats/chattingList/${userInfo.id}`);
-
+    
         const response = await axios.get(`${apiUrl}/api/v1/chats/chattingList/${userInfo.id}`, {
           headers: {
             Authorization: `Bearer ${userInfo.jwtToken.accessToken}`,
           },
         });
-
-        console.log("Chat list response:", response);
-
+    
         if (response.status === 200) {
           const chats = response.data.data;
           setChatList(chats);
-
+    
           // chatData 업데이트
           const updatedChatData = {};
           chats.forEach((chat) => {
@@ -175,10 +173,10 @@ const Chat = () => {
       <Header>채팅 목록</Header>
       <ChatListContainer>
         {chatList.map((chat) => {
-          const isUser1 = chat.user1Id === userInfo.id;
+          const isUser1 = chat.userlId === userInfo.id;
           const chatPartner = isUser1
-            ? { name: chat.user2Name, profileImage: chat.user2ProfileImage }
-            : { name: chat.user1Name, profileImage: chat.user1ProfileImage };
+            ? { name: chat.userName, profileImage: chat.user2ProfileImage }
+            : { name: chat.userName, profileImage: chat.user1ProfileImage };         
 
           return (
             <ChatItem

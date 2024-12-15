@@ -337,47 +337,79 @@ const Product = () => {
   }, [product, userInfo]);
   
 
-const handleFavoriteToggle = async () => {
-  if (!product || !product.postId) {
-    alert("상품 정보가 올바르지 않습니다.");
-    return;
-  }
-
-  try {
-    const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
-    const url = `${apiUrl}/api/v1/posts/like/${product.postId}`;
-
-    if (isFavorite) {
-      // 관심 해제
-      await axios.delete(url, {
-        headers: {
-          Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
-        },
-      });
-      alert("관심 등록이 취소되었습니다.");
-      setIsFavorite(false);
-      setFavoriteProducts((prev) => prev.filter((fav) => fav.postId !== product.postId));
-    } else {
-      // 관심 등록
-      await axios.post(url, null, {
-        headers: {
-          Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
-        },
-      });
-      alert("관심 목록에 추가되었습니다.");
-      setIsFavorite(true);
-      setFavoriteProducts((prev) => [...prev, product]);
+  const handleFavoriteToggle = async () => {
+    if (!product || !product.postId) {
+      alert("상품 정보가 올바르지 않습니다.");
+      return;
     }
-  } catch (error) {
-    console.error("관심 등록/해제 에러:", error.response?.data || error.message);
-    alert(error.response?.data?.message || "관심 등록/해제 중 오류가 발생했습니다.");
-  }
-};
 
+    try {
+      const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+      const url = `${apiUrl}/api/v1/posts/like/${product.postId}`;
 
-  const handleChat = () => {
-    setIsModalOpen(true);
+      if (isFavorite) {
+        // 관심 해제
+        await axios.delete(url, {
+          headers: {
+            Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
+          },
+        });
+        alert("관심 등록이 취소되었습니다.");
+        setIsFavorite(false);
+        setFavoriteProducts((prev) => prev.filter((fav) => fav.postId !== product.postId));
+      } else {
+        // 관심 등록
+        await axios.post(url, null, {
+          headers: {
+            Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
+          },
+        });
+        alert("관심 목록에 추가되었습니다.");
+        setIsFavorite(true);
+        setFavoriteProducts((prev) => [...prev, product]);
+      }
+    } catch (error) {
+      console.error("관심 등록/해제 에러:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "관심 등록/해제 중 오류가 발생했습니다.");
+    }
   };
+
+  const createChatRoom = async () => {
+    if (!product) {
+      alert("상품 정보를 불러오지 못했습니다.");
+      return;
+    }
+  
+    try {
+      const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+      const buyerId = userInfo.id;
+      const sellerId = product.userId;
+  
+      console.log(`POST 요청 URL: ${apiUrl}/api/v1/chatRooms/${buyerId}/${sellerId}`);
+  
+      const response = await axios.post(
+        `${apiUrl}/api/v1/chatRooms/${buyerId}/${sellerId}`,
+        {}, // 요청 본문이 필요 없으면 빈 객체 전달
+        {
+          headers: {
+            Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
+          },
+        }
+      );
+  
+      if (response.status === 200 || response.status === 201) {
+        const roomId = response.data.data.roomId;
+        navigate(`/chat/${roomId}`);
+      } else {
+        alert("채팅방 생성에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("채팅방 생성 에러:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "채팅방 생성 중 오류가 발생했습니다.");
+    }
+  };
+  
+  
 
   const confirmChat = () => {
     if (!product) return;
@@ -537,9 +569,9 @@ const handleFavoriteToggle = async () => {
           <div className="value">{product.price}원</div>
         </InfoRow>
         <ButtonContainer>
-          <button className="chat-btn" onClick={handleChat}>
-            1:1 채팅
-          </button>
+        <button className="chat-btn" onClick={createChatRoom}>
+          1:1 채팅
+        </button>
           <button className="heart-btn" onClick={handleFavoriteToggle}>
             {isFavorite ? (
               <span className="heart">❤️</span>

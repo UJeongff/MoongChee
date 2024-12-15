@@ -16,13 +16,13 @@ import SearchResult from "./pages/SearchResult";
 import Initialinfo from "./pages/Initialinfo";
 import Review from "./pages/Review";
 import Chat from "./pages/Chat";
-import ChatDetail from "./pages/ChatDetail";
+import ChatDetail from "./pages/ChatDetail"; // Import 추가
 import Detail from "./pages/Detail";
 import Login from "./pages/Login";
 import OAuthCallback from "./pages/OAuthCallback";
 import ReviewList from "./pages/Reviewlist";
 import ProfileOther from "./pages/ProfileOther";
-import OtherReviewList from "./pages/OtherReviewList"; // Import 추가
+import OtherReviewList from "./pages/OtherReviewList";
 
 import { UserProvider, UserContext } from "./contexts/UserContext.jsx";
 import { useContext } from "react";
@@ -79,6 +79,15 @@ function App() {
             </ProtectedRoute>
           }
         />
+        {/* ChatDetail 라우트 추가 */}
+        <Route
+          path="/chat/:roomId"
+          element={
+            <ProtectedRoute>
+              <ChatDetail />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/profile"
           element={
@@ -113,7 +122,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* 새로운 라우트 추가 */}
         <Route
           path="/otherreviews/:userId"
           element={
