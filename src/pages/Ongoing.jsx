@@ -169,6 +169,12 @@ const Ongoing = () => {
     fetchActivePosts();
   }, [userInfo]);
 
+  const statusMappingToKorean = {
+    ACTIVE: "거래가능",
+    RESERVED: "거래중",
+    CLOSED: "거래종료",
+  };
+  
   return (
     <Container>
       <Header>
@@ -191,11 +197,14 @@ const Ongoing = () => {
                 <span>{item.productName}</span>
                 <p>{item.price}원</p>
               </ItemDetails>
-              <TransactionStatus>{item.status === "ACTIVE" ? "거래가능" : item.status}</TransactionStatus>
+              <TransactionStatus>
+                {statusMappingToKorean[item.status] || "알 수 없는 상태"}
+              </TransactionStatus>
             </ItemCard>
           ))
         )}
       </ListContainer>
+
     </Container>
   );
 };
