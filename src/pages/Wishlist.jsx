@@ -138,7 +138,7 @@ const Wishlist = () => {
 
   const removeFavorite = async (productId) => {
     try {
-      const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+      const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
   
       console.log("Deleting favorite product with ID:", productId);
       console.log("Request URL:", `${apiUrl}/api/v1/posts/like/${productId}`);

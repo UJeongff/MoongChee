@@ -153,7 +153,7 @@ const Review = () => {
       return;
     }
 
-    const apiUrl = "http://43.203.202.100:8080/api/v1";
+    const apiUrl = "https://43.203.202.100.nip.io/api/v1";
     const reviewScoreEnum = ["ONE", "TWO", "THREE", "FOUR", "FIVE"];
 
     try {

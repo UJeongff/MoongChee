@@ -336,7 +336,7 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const apiUrl = "http://43.203.202.100:8080"; // 실제 API URL로 변경 필요
+      const apiUrl = "https://43.203.202.100.nip.io"; // 실제 API URL로 변경 필요
 
       // FormData를 사용하여 이미지 파일과 데이터를 함께 전송
       const formData = new FormData();

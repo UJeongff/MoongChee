@@ -270,7 +270,7 @@ const Edit = () => {
 
   const handleSubmit = async () => {
     try {
-      const apiUrl = "http://43.203.202.100:8080/api/v1";
+      const apiUrl = "https://43.203.202.100.nip.io/api/v1";
 
       // 카테고리 매핑 확인
       const keyword = categoryToKeywordMap[input.category];

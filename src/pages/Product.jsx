@@ -381,7 +381,7 @@ const Product = () => {
     }
   
     try {
-      const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+      const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
       const buyerId = userInfo.id;
       const sellerId = product.userId;
   

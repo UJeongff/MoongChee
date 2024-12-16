@@ -96,7 +96,7 @@ const Chat = () => {
 
     const fetchChatList = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
         console.log(`Fetching chat list from: ${apiUrl}/api/v1/chats/chattingList/${userInfo.id}`);
     
         const response = await axios.get(`${apiUrl}/api/v1/chats/chattingList/${userInfo.id}`, {
