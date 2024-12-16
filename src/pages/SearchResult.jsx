@@ -2,14 +2,13 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 
-const categoryMapping = {
-  "소프트웨어": "SOFTWARE",
-  "인공지능": "AI",
-  "컴퓨터공학": "COMPUTER_SCIENCE",
-  "산업공학": "INDUSTRIAL_ENGINEERING",
-  "시각디자인": "VISUAL_DESIGN",
-  "경영학": "BUSINESS",
-  "경제학": "ECONOMICS",
+const keywordToCategoryMap = {
+  "서적": "BOOK",
+  "생활용품": "NECESSITY",
+  "전자제품": "ELECTRONICS",
+  "의류": "CLOTH",
+  "잡화": "GOODS",
+  "기타": "OTHER",
 };
 
 const Container = styled.div`
@@ -19,7 +18,6 @@ const Container = styled.div`
   max-width: 393px;
   min-height: 100vh;
   margin: 0 auto;
-  padding: 0;
   background-color: white;
   font-family: "Arial", sans-serif;
 `;
@@ -76,22 +74,16 @@ const ProductCard = styled.div`
   .product-details {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    text-align: left;
 
     .product-title {
       font-size: 16px;
       font-weight: bold;
       margin-bottom: 8px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .product-info {
       font-size: 14px;
       color: #555;
-      margin-bottom: 4px;
     }
 
     .product-price {
@@ -112,7 +104,7 @@ const NoResults = styled.div`
 const SearchResult = () => {
   const navigate = useNavigate();
   const [results, setResults] = useState([]);
-  const [filterCategory, setFilterCategory] = useState("소프트웨어"); // 예제 카테고리
+  const [keyword, setKeyword] = useState("서적"); // 선택된 한글 키워드 예시
 
   useEffect(() => {
     const searchResults =
@@ -121,7 +113,7 @@ const SearchResult = () => {
   }, []);
 
   const filteredResults = results.filter((product) => {
-    const englishCategory = categoryMapping[filterCategory];
+    const englishCategory = keywordToCategoryMap[keyword];
     return product.category === englishCategory;
   });
 
@@ -134,8 +126,7 @@ const SearchResult = () => {
         <input
           type="text"
           className="search-input"
-          value={filterCategory}
-          placeholder="검색 결과"
+          value={keyword}
           readOnly
         />
       </Header>
@@ -154,7 +145,9 @@ const SearchResult = () => {
               />
               <div className="product-details">
                 <span className="product-title">{product.name}</span>
-                <span className="product-info">{new Date(product.createdAt).toLocaleDateString()}</span>
+                <span className="product-info">
+                  {new Date(product.createdAt).toLocaleDateString()}
+                </span>
                 <span className="product-price">{product.price}원</span>
               </div>
             </ProductCard>
