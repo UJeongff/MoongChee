@@ -130,12 +130,14 @@ const Search = () => {
   const [selectedType, setSelectedType] = useState(null); // 대여/판매 필터링 상태 추가
   const navigate = useNavigate();
 
+  // 카테고리 선택/취소 핸들러
   const handleCategoryClick = (category) => {
-    setSelectedCategory(category);
+    setSelectedCategory((prevCategory) => (prevCategory === category ? null : category));
   };
 
+  // 대여/판매 선택/취소 핸들러
   const handleTypeClick = (type) => {
-    setSelectedType(type);
+    setSelectedType((prevType) => (prevType === type ? null : type));
   };
 
   const handleBack = () => {
@@ -144,20 +146,20 @@ const Search = () => {
 
   const handleSearch = async () => {
     const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
-  
+
     try {
       const params = {};
       if (keyword) params.name = keyword;
-      if (selectedCategory) params.keyword = mapCategoryToKeyword[selectedCategory];
+      if (selectedCategory) params.keyword = mapCategoryToKeyword(selectedCategory);
       if (selectedType) params.tradeType = selectedType === "판매" ? "SALE" : "RENTAL";
-  
+
       const response = await axios.get(`${apiUrl}/api/v1/posts/search`, {
         params,
         headers: {
           Authorization: `Bearer ${userInfo.jwtToken.accessToken}`,
         },
       });
-  
+
       if (response.status === 200) {
         localStorage.setItem("searchResults", JSON.stringify(response.data.data));
         navigate("/searchresult");
@@ -181,7 +183,7 @@ const Search = () => {
       기타: "OTHER",
     };
     return categoryMap[category] || null;
-  };  
+  };
 
   return (
     <Container>
@@ -205,17 +207,15 @@ const Search = () => {
       <CategorySection>
         <h4>카테고리</h4>
         <CategoryList>
-          {["서적", "생활용품", "전자제품", "의류", "잡화", "기타"].map(
-            (category) => (
-              <button
-                key={category}
-                onClick={() => handleCategoryClick(category)}
-                className={selectedCategory === category ? "selected" : ""}
-              >
-                {category}
-              </button>
-            )
-          )}
+          {["서적", "생활용품", "전자제품", "의류", "잡화", "기타"].map((category) => (
+            <button
+              key={category}
+              onClick={() => handleCategoryClick(category)}
+              className={selectedCategory === category ? "selected" : ""}
+            >
+              {category}
+            </button>
+          ))}
         </CategoryList>
       </CategorySection>
       <TypeSection>
