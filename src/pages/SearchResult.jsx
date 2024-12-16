@@ -92,17 +92,30 @@ const NoResults = styled.div`
   color: #888;
 `;
 
+// 카테고리 매핑 함수 추가
+const mapCategoryToKeyword = (category) => {
+  const categoryMap = {
+    서적: "BOOK",
+    생활용품: "NECESSITY",
+    전자제품: "ELECTRONICS",
+    의류: "CLOTH",
+    잡화: "GOODS",
+    기타: "OTHER",
+  };
+  return categoryMap[category] || null;
+};
+
 const SearchResult = () => {
   const navigate = useNavigate();
   const [results, setResults] = useState([]);
   const [keyword, setKeyword] = useState("");
 
   useEffect(() => {
-    // 로컬 스토리지에서 검색 결과와 선택된 카테고드를 가져옴
+    // 로컬 스토리지에서 검색 결과와 선택된 카테고리를 가져옴
     const searchResults =
       JSON.parse(localStorage.getItem("searchResults")) || [];
     const selectedKeyword = localStorage.getItem("selectedKeyword") || "";
-    
+
     setResults(searchResults);
     setKeyword(selectedKeyword);
   }, []);
