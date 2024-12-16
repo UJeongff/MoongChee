@@ -136,7 +136,7 @@ const SearchResult = () => {
               />
               <div className="product-details">
                 <span className="product-title">{product.name}</span>
-                <span className="product-info">{product.date}</span>
+                <span className="product-info">{new Date(product.createdAt).toLocaleDateString()}</span>
                 <span className="product-price">{product.price}원</span>
               </div>
             </ProductCard>
