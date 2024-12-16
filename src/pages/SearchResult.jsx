@@ -112,19 +112,22 @@ const SearchResult = () => {
 
   useEffect(() => {
     // 로컬 스토리지에서 검색 결과와 선택된 카테고리를 가져옴
-    const searchResults =
-      JSON.parse(localStorage.getItem("searchResults")) || [];
+    const searchResults = JSON.parse(localStorage.getItem("searchResults")) || [];
     const selectedKeyword = localStorage.getItem("selectedKeyword") || "";
-
+    const selectedCategory = localStorage.getItem("selectedCategory") || "";
+  
     setResults(searchResults);
     setKeyword(selectedKeyword);
+    setCategory(selectedCategory);
   }, []);
-
-  // 선택된 키워드를 기반으로 필터링
+  
+  const [category, setCategory] = useState("");
+  
+  // 선택된 카테고리를 기반으로 필터링
   const filteredResults = results.filter((product) => {
-    const englishCategory = mapCategoryToKeyword(keyword);
-    return product.category === englishCategory;
-  });
+    const englishCategory = mapCategoryToKeyword(category);
+    return englishCategory ? product.category === englishCategory : true;
+  });  
 
   return (
     <Container>

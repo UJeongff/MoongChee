@@ -146,20 +146,27 @@ const Search = () => {
 
   const handleSearch = async () => {
     const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
-
+  
     try {
       const params = {};
       if (keyword) params.name = keyword;
-      if (selectedCategory) params.keyword = mapCategoryToKeyword(selectedCategory);
+      if (selectedCategory) {
+        const categoryKeyword = mapCategoryToKeyword(selectedCategory);
+        params.keyword = categoryKeyword;
+        localStorage.setItem("selectedCategory", selectedCategory); // 선택한 카테고리를 로컬 스토리지에 저장
+      } else {
+        localStorage.removeItem("selectedCategory"); // 선택한 카테고리가 없으면 제거
+      }
+  
       if (selectedType) params.tradeType = selectedType === "판매" ? "SALE" : "RENTAL";
-
+  
       const response = await axios.get(`${apiUrl}/api/v1/posts/search`, {
         params,
         headers: {
           Authorization: `Bearer ${userInfo.jwtToken.accessToken}`,
         },
       });
-
+  
       if (response.status === 200) {
         localStorage.setItem("searchResults", JSON.stringify(response.data.data));
         navigate("/searchresult");
@@ -170,7 +177,7 @@ const Search = () => {
       console.error("검색 에러:", error);
       alert(`검색 중 오류가 발생했습니다: ${error.response?.data?.message || error.message}`);
     }
-  };
+  };  
 
   // 카테고리 한국어를 키워드로 매핑하는 함수
   const mapCategoryToKeyword = (category) => {
