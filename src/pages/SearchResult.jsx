@@ -66,6 +66,8 @@ const ProductCard = styled.div`
   .product-details {
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
 
     .product-title {
       font-size: 16px;

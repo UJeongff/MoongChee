@@ -176,7 +176,7 @@ const Wishlist = () => {
             .sort((a, b) => new Date(b.date) - new Date(a.date)) // 날짜 순 정렬
             .map((product) => (
               <ItemCard key={product.postId}>
-                <ItemDate>{product.date}</ItemDate>
+                <ItemDate>{new Date(product.createdAt).toLocaleDateString()}</ItemDate>
                 <ItemImage
                   src={product.productImageUrls[0] || "/default-image.png"}
                   alt={product.name}
