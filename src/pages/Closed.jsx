@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { UserContext } from "../contexts/UserContext.jsx";
+import Footer from "../components/Footer"; 
 
 const Container = styled.div`
   display: flex;
@@ -131,33 +132,34 @@ const Closed = () => {
   useEffect(() => {
     const fetchClosedProducts = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
         const token = userInfo?.jwtToken?.accessToken;
-
+  
         const response = await axios.get(`${apiUrl}/api/v1/profile/my-closed-posts`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-
+  
         if (response.status === 200) {
           const products = response.data.data.map((item) => ({
             id: item.postId,
             productName: item.name,
             image: item.productImageUrls?.[0] || "/default-image.png",
-            price: item.rentalPrice,
+            price: item.price || item.rentalPrice || item.salePrice, // 가격 필드 확인 및 설정
             date: item.createdAt,
           }));
-
+  
           setClosedProducts(products);
         }
       } catch (error) {
         console.error("종료된 거래 데이터 불러오기 실패:", error);
       }
     };
-
+  
     fetchClosedProducts();
   }, [setClosedProducts, userInfo]);
+  
 
   return (
     <Container>
@@ -188,6 +190,7 @@ const Closed = () => {
           <NoDataMessage>종료된 거래가 없습니다.</NoDataMessage>
         )}
       </ListContainer>
+      <Footer />
     </Container>
   );
 };
