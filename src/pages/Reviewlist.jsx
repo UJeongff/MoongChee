@@ -68,6 +68,14 @@ const ReviewCard = styled.div`
   }
 `;
 
+const NoReviews = styled.div`
+  text-align: center;
+  margin-top: 20px;
+  font-size: 16px;
+  color: #888;
+`;
+
+
 
 // 별점 문자열을 숫자로 변환하는 함수
 const convertRatingToStars = (rating) => {
@@ -127,7 +135,6 @@ const ReviewList = () => {
                 <div className="date">{new Date(review.createdAt).toLocaleDateString()}</div>
               </div>
             </ReviewCard>
-
           ))
         ) : (
           <NoReviews>작성된 리뷰가 없습니다.</NoReviews>
