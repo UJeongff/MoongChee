@@ -155,7 +155,7 @@ const Ongoing = () => {
             productName: item.name,
             image: item.productImageUrls?.[0] || "/default-image.png",
             date: item.date || item.createdAt.split("T")[0],
-            price: item.rentalPrice || 0,
+            price: item.price || 0,
             status: item.postStatus,
           }));
           setOngoingProducts(products);
