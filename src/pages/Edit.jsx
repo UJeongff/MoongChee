@@ -228,7 +228,7 @@ const Edit = () => {
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
-        const apiUrl = "http://43.203.202.100:8080/api/v1";
+        const apiUrl = "https://43.203.202.100.nip.io/api/v1";
         const response = await axios.get(`${apiUrl}/posts/${id}`, {
           headers: {
             Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
