@@ -2,15 +2,6 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 
-const keywordToCategoryMap = {
-  "서적": "BOOK",
-  "생활용품": "NECESSITY",
-  "전자제품": "ELECTRONICS",
-  "의류": "CLOTH",
-  "잡화": "GOODS",
-  "기타": "OTHER",
-};
-
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -118,7 +109,7 @@ const SearchResult = () => {
 
   // 선택된 키워드를 기반으로 필터링
   const filteredResults = results.filter((product) => {
-    const englishCategory = keywordToCategoryMap[keyword];
+    const englishCategory = mapCategoryToKeyword(keyword);
     return product.category === englishCategory;
   });
 

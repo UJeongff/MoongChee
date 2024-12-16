@@ -143,7 +143,7 @@ const Search = () => {
   };
 
   const handleSearch = async () => {
-    const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080/api/v1";
+    const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
   
     try {
       const params = {};
@@ -169,10 +169,9 @@ const Search = () => {
       alert(`검색 중 오류가 발생했습니다: ${error.response?.data?.message || error.message}`);
     }
   };
-  
 
   // 카테고리 한국어를 키워드로 매핑하는 함수
-  const categoryToKeywordMap = (category) => {
+  const mapCategoryToKeyword = (category) => {
     const categoryMap = {
       서적: "BOOK",
       생활용품: "NECESSITY",
@@ -183,6 +182,7 @@ const Search = () => {
     };
     return categoryMap[category] || null;
   };
+  
 
   return (
     <Container>
