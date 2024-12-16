@@ -3,41 +3,69 @@ import styled from "styled-components";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import { UserContext } from "../contexts/UserContext.jsx";
-
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 const Container = styled.div`
-  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 393px; /* 최대 가로 폭을 제한 */
+  min-height: 100vh;
+  margin: 0 auto;
+  background-color: white;
+  font-family: "Arial", sans-serif;
+  box-sizing: border-box;
+`;
+
+const Content = styled.div`
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
 `;
 
 const ReviewCard = styled.div`
+  display: flex;
+  align-items: flex-start;
   background-color: #f9f9f9;
   border: 1px solid #ddd;
   border-radius: 8px;
   margin-bottom: 16px;
-  padding: 16px;
+  padding: 12px;
+  gap: 12px; /* 이미지와 내용 사이 간격 */
 
-  .title {
-    font-size: 16px;
-    font-weight: bold;
-    margin-bottom: 8px;
-    color: #333;
+  .image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0; /* 이미지 크기 고정 */
+  }
+
+  .review-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 1; /* 남은 공간을 모두 차지 */
   }
 
   .rating {
     font-size: 14px;
     color: #555;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
 
   .content {
     font-size: 14px;
     color: #666;
+    margin-bottom: 4px;
+    flex: 1; /* 리뷰 내용이 남은 공간을 차지 */
   }
 
   .date {
     font-size: 12px;
     color: #777;
-    margin-top: 8px;
   }
 `;
 
@@ -97,22 +125,31 @@ const OtherReviewList = () => {
 
   return (
     <Container>
-      <h3>{reviews.length > 0 ? `${reviews[0].revieweeName} 리뷰` : "상대방 리뷰"}</h3>
-      {loading ? (
-        <p>리뷰 로딩 중...</p>
-      ) : reviews.length > 0 ? (
-        reviews.map((review, index) => (
-          <ReviewCard key={review.id || index}>
-            <div className="rating">{convertRatingToStars(review.reviewScore)}</div>
-            <div className="content">{review.reviewContent}</div>
-            <div className="date">{new Date(review.createdAt).toLocaleDateString()}</div>
-          </ReviewCard>
-        ))
-      ) : (
-        <NoReviews>작성된 리뷰가 없습니다.</NoReviews>
-      )}
+      <Header title="상대방 리뷰" />
+      <Content>
+        {loading ? (
+          <p>리뷰 로딩 중...</p>
+        ) : reviews.length > 0 ? (
+          reviews.map((review, index) => (
+            <ReviewCard key={review.id || index}>
+              <img
+                className="image"
+                src={review.productImageUrls?.[0] || "/default-image.png"}
+                alt="상품 이미지"
+              />
+              <div className="review-content">
+                <div className="rating">{convertRatingToStars(review.reviewScore)}</div>
+                <div className="content">{review.reviewContent}</div>
+                <div className="date">{new Date(review.createdAt).toLocaleDateString()}</div>
+              </div>
+            </ReviewCard>
+          ))
+        ) : (
+          <NoReviews>작성된 리뷰가 없습니다.</NoReviews>
+        )}
+      </Content>
+      <Footer />
     </Container>
-
   );
 };
 
