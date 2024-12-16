@@ -2,6 +2,16 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 
+const categoryMapping = {
+  "소프트웨어": "SOFTWARE",
+  "인공지능": "AI",
+  "컴퓨터공학": "COMPUTER_SCIENCE",
+  "산업공학": "INDUSTRIAL_ENGINEERING",
+  "시각디자인": "VISUAL_DESIGN",
+  "경영학": "BUSINESS",
+  "경제학": "ECONOMICS",
+};
+
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -102,12 +112,18 @@ const NoResults = styled.div`
 const SearchResult = () => {
   const navigate = useNavigate();
   const [results, setResults] = useState([]);
+  const [filterCategory, setFilterCategory] = useState("소프트웨어"); // 예제 카테고리
 
   useEffect(() => {
     const searchResults =
       JSON.parse(localStorage.getItem("searchResults")) || [];
     setResults(searchResults);
   }, []);
+
+  const filteredResults = results.filter((product) => {
+    const englishCategory = categoryMapping[filterCategory];
+    return product.category === englishCategory;
+  });
 
   return (
     <Container>
@@ -118,14 +134,14 @@ const SearchResult = () => {
         <input
           type="text"
           className="search-input"
-          value=""
+          value={filterCategory}
           placeholder="검색 결과"
           readOnly
         />
       </Header>
       <ProductList>
-        {results.length > 0 ? (
-          results.map((product) => (
+        {filteredResults.length > 0 ? (
+          filteredResults.map((product) => (
             <ProductCard
               key={product.postId}
               onClick={() => navigate(`/product/${product.postId}`)}
