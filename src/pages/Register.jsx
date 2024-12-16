@@ -364,7 +364,7 @@ const Register = () => {
 
       if (response.status === 200) {
         alert("상품이 성공적으로 등록되었습니다.");
-        navigate("/mypage");
+        navigate("/");
       } else {
         alert("상품 등록에 실패했습니다. 다시 시도해주세요.");
       }

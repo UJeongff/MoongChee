@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { FaHeart } from "react-icons/fa";
 import axios from "axios";
 import { UserContext } from "../contexts/UserContext.jsx";
+import Footer from "../components/Footer"; 
 
 const Container = styled.div`
   display: flex;
@@ -192,6 +193,7 @@ const Wishlist = () => {
           <p>관심 목록이 비어 있습니다.</p>
         )}
       </ListContainer>
+      <Footer />
     </Container>
   );
 };
