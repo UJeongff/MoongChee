@@ -40,13 +40,36 @@ function App() {
         <Route path="/" element={<Main />} />
         <Route path="/search" element={<Search />} />
         <Route path="/searchresult" element={<SearchResult />} />
-        <Route path="/wishlist" element={<Wishlist />} />
-        <Route path="/ongoing-transaction" element={<Ongoing />} />
-        <Route path="/closed-transaction" element={<Closed />} />
         <Route path="/detail" element={<Detail />} />
         <Route path="/login" element={<Login />} />
         <Route path="/oauth/google/callback" element={<OAuthCallback />} />
+        <Route path="/edit/:id" element={<Edit />} />
+        <Route path="/initialinfo" element={<Initialinfo />} />
 
+        <Route
+          path="/wishlist"
+          element={
+            <ProtectedRoute>
+              <Wishlist />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ongoing-transaction"
+          element={
+            <ProtectedRoute>
+              <Ongoing />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/closed-transaction"
+          element={
+            <ProtectedRoute>
+              <Closed />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/register"
           element={
@@ -79,7 +102,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* ChatDetail 라우트 추가 */}
         <Route
           path="/chat/:roomId"
           element={
@@ -96,8 +118,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/edit/:id" element={<Edit />} />
-        <Route path="/initialinfo" element={<Initialinfo />} />
         <Route
           path="/review/:productId"
           element={

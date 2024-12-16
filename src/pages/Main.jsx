@@ -136,25 +136,20 @@ const Main = () => {
   useEffect(() => {
     const getProducts = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
     
-        const response = await axiosInstance.get(`${apiUrl}/api/v1/posts`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        });
+        const response = await axiosInstance.get(`${apiUrl}/api/v1/posts`);
         
-    
         if (response.status === 200 && Array.isArray(response.data.data)) {
           setOngoingProducts(response.data.data);
         } else {
           console.error("응답 데이터가 배열이 아닙니다:", response.data);
         }
-        
       } catch (error) {
         console.error("상품 데이터 페칭 에러:", error);
       }
     };
+    
     
 
     getProducts();
