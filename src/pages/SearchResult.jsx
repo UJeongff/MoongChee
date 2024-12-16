@@ -126,9 +126,9 @@ const SearchResult = () => {
   // 선택된 카테고리를 기반으로 필터링
   const filteredResults = results.filter((product) => {
     const englishCategory = mapCategoryToKeyword(category);
-    return englishCategory ? product.category === englishCategory : true;
-  });  
-
+    return englishCategory ? product.keyword === englishCategory : true;
+  });
+  
   return (
     <Container>
       <Header>

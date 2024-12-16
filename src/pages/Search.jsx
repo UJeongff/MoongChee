@@ -153,9 +153,9 @@ const Search = () => {
       if (selectedCategory) {
         const categoryKeyword = mapCategoryToKeyword(selectedCategory);
         params.keyword = categoryKeyword;
-        localStorage.setItem("selectedCategory", selectedCategory); // 선택한 카테고리를 로컬 스토리지에 저장
+        localStorage.setItem("selectedCategory", selectedCategory); // 선택한 카테고리를 저장
       } else {
-        localStorage.removeItem("selectedCategory"); // 선택한 카테고리가 없으면 제거
+        localStorage.removeItem("selectedCategory");
       }
   
       if (selectedType) params.tradeType = selectedType === "판매" ? "SALE" : "RENTAL";
