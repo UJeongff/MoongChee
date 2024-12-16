@@ -148,7 +148,7 @@ const Search = () => {
     try {
       const params = {};
       if (keyword) params.name = keyword;
-      if (selectedCategory) params.keyword = categoryToKeywordMap[selectedCategory];
+      if (selectedCategory) params.keyword = mapCategoryToKeyword[selectedCategory];
       if (selectedType) params.tradeType = selectedType === "판매" ? "SALE" : "RENTAL";
   
       const response = await axios.get(`${apiUrl}/api/v1/posts/search`, {
@@ -181,8 +181,7 @@ const Search = () => {
       기타: "OTHER",
     };
     return categoryMap[category] || null;
-  };
-  
+  };  
 
   return (
     <Container>
