@@ -104,14 +104,19 @@ const NoResults = styled.div`
 const SearchResult = () => {
   const navigate = useNavigate();
   const [results, setResults] = useState([]);
-  const [keyword, setKeyword] = useState("서적"); // 선택된 한글 키워드 예시
+  const [keyword, setKeyword] = useState("");
 
   useEffect(() => {
+    // 로컬 스토리지에서 검색 결과와 선택된 카테고드를 가져옴
     const searchResults =
       JSON.parse(localStorage.getItem("searchResults")) || [];
+    const selectedKeyword = localStorage.getItem("selectedKeyword") || "";
+    
     setResults(searchResults);
+    setKeyword(selectedKeyword);
   }, []);
 
+  // 선택된 키워드를 기반으로 필터링
   const filteredResults = results.filter((product) => {
     const englishCategory = keywordToCategoryMap[keyword];
     return product.category === englishCategory;
@@ -127,6 +132,7 @@ const SearchResult = () => {
           type="text"
           className="search-input"
           value={keyword}
+          placeholder="검색 결과"
           readOnly
         />
       </Header>
