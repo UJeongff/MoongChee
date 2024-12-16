@@ -118,7 +118,7 @@ const Wishlist = () => {
   useEffect(() => {
     const fetchMyLikePosts = async () => {
       try {
-        const apiUrl = "http://43.203.202.100:8080/api/v1"; // 올바른 API 경로
+        const apiUrl = "https://43.203.202.100.nip.io/api/v1"; // 올바른 API 경로
         const response = await axios.get(`${apiUrl}/profile/my-like-posts`, {
           headers: {
             Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`, // 토큰 추가
