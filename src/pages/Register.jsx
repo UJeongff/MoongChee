@@ -195,9 +195,9 @@ const ModalContent = styled.div`
   padding: 20px;
   border-radius: 8px;
   width: 100%;
-  max-width: 393px;  /* Header, Footer와 동일한 최대 너비 */
-  position: relative;
-  box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
+  max-width: 393px; /* 최대 너비를 페이지와 동일하게 설정 */
+  margin: 0 auto; /* 중앙 정렬 */
+  box-sizing: border-box; /* 패딩을 포함한 너비 */
 `;
 
 const TermsSection = styled.section`
