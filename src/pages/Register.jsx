@@ -188,6 +188,7 @@ const Modal = styled.div`
   display: ${(props) => (props.$isOpen ? "flex" : "none")};
   justify-content: center;
   align-items: center;
+  max-width: 393px;
 `;
 
 const ModalContent = styled.div`
