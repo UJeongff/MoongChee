@@ -5,6 +5,7 @@ import { UserContext } from "../contexts/UserContext.jsx";
 import Footer from "../components/Footer";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
+import axios from "axios";
 
 // Styled Components 정의
 const Container = styled.div`
@@ -100,7 +101,7 @@ const Loading = styled.div`
 
 const ChatDetail = () => {
   const { roomId } = useParams();
-  const [resolvedRoomId, setResolvedRoomId] = useState(null); // roomId 상태 저장
+  const [resolvedRoomId, setResolvedRoomId] = useState(null);
   const { userInfo } = useContext(UserContext);
   const navigate = useNavigate();
   const [client, setClient] = useState(null);
@@ -108,24 +109,54 @@ const ChatDetail = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // WebSocket 연결 및 메시지 처리
+  // 이전 채팅 내역 불러오기
+  useEffect(() => {
+    const fetchChatHistory = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
+        const response = await axios.get(`${apiUrl}/api/v1/chats/chatting/${roomId}/0/50`, {
+          headers: {
+            Authorization: `Bearer ${userInfo.jwtToken.accessToken}`,
+          },
+        });
+
+        if (response.status === 200) {
+          const fetchedMessages = response.data.data.map((msg) => ({
+            sender: msg.senderId === userInfo.id ? "me" : "other",
+            text: msg.content,
+            createdAt: msg.createdAt,
+          }));
+          setMessages(fetchedMessages);
+        } else {
+          console.error("채팅 내역을 불러오는 데 실패했습니다.");
+        }
+      } catch (error) {
+        console.error("채팅 내역 로드 에러:", error);
+      }
+    };
+
+    if (roomId && userInfo && userInfo.id) {
+      fetchChatHistory();
+    }
+  }, [roomId, userInfo]);
+
+  // WebSocket 연결 설정
   useEffect(() => {
     if (!roomId) {
       console.log("roomId is missing, redirecting to chat list...");
-      navigate("/chat"); // roomId가 없으면 채팅 목록으로 이동
+      navigate("/chat");
       return;
     }
 
-    setResolvedRoomId(roomId); // roomId가 있으면 상태에 저장
+    setResolvedRoomId(roomId);
     console.log("roomId:", roomId);
 
     const stompClient = new Client({
-      // brokerURL 대신 webSocketFactory 사용
       webSocketFactory: () => new SockJS("https://43.203.202.100.nip.io/ws"),
       connectHeaders: {
         Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
       },
-      reconnectDelay: 5000, // 5초 후 재연결 시도
+      reconnectDelay: 5000,
       onConnect: (frame) => {
         console.log("WebSocket connected:", frame);
         setLoading(false);
@@ -142,6 +173,7 @@ const ChatDetail = () => {
               {
                 sender: receivedMessage.senderId === userInfo.id ? "me" : "other",
                 text: receivedMessage.content,
+                createdAt: receivedMessage.createdAt, // 추가: 생성 시간
               },
             ]);
           }
@@ -187,7 +219,7 @@ const ChatDetail = () => {
           destination: "/pub/chats/messages",
           body: JSON.stringify(messagePayload),
         });
-        setInput(""); // 메시지 전송 후 입력창 초기화
+        setInput("");
       } catch (error) {
         console.error("메시지 전송 에러:", error);
         alert("메시지 전송에 실패했습니다.");
@@ -208,6 +240,9 @@ const ChatDetail = () => {
             {messages.map((msg, index) => (
               <MessageBubble key={index} sender={msg.sender}>
                 {msg.text}
+                <div style={{ fontSize: "10px", textAlign: msg.sender === "me" ? "right" : "left" }}>
+                  {new Date(msg.createdAt).toLocaleTimeString()}
+                </div>
               </MessageBubble>
             ))}
           </ChatContent>
