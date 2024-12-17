@@ -4,7 +4,6 @@ import styled from "styled-components";
 import { UserContext } from "../contexts/UserContext.jsx";
 import Footer from "../components/Footer";
 import { Client } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
 
 // Styled Components 정의
 const Container = styled.div`
@@ -29,44 +28,6 @@ const Header = styled.header`
   font-weight: bold;
   font-size: 20px;
   border-bottom: 1px solid #ddd;
-`;
-
-const ChatHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 16px;
-  border-bottom: 1px solid #ddd;
-
-  .product-info {
-    flex: 1;
-
-    .product-name {
-      font-size: 16px;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-  }
-`;
-
-const ProductImage = styled.img`
-  width: 60px;
-  height: 60px;
-  object-fit: cover;
-  border-radius: 8px;
-  margin-right: 10px;
-`;
-
-const ReviewButton = styled.button`
-  padding: 6px 10px;
-  font-size: 12px;
-  color: white;
-  background-color: #28a745;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
 `;
 
 const ChatContent = styled.div`
@@ -120,7 +81,7 @@ const MessageBubble = styled.div`
   border-radius: 16px;
   color: black;
   background-color: ${(props) =>
-    props.sender === "me" ? "#d0e8ff" : "#d9f7d9"}; /* 연한 파랑, 초록 */
+    props.sender === "me" ? "#d0e8ff" : "#d9f7d9"};
   align-self: ${(props) => (props.sender === "me" ? "flex-end" : "flex-start")};
   text-align: ${(props) => (props.sender === "me" ? "right" : "left")};
   word-wrap: break-word;
@@ -148,8 +109,10 @@ const ChatDetail = () => {
   useEffect(() => {
     if (!roomId) return;
 
+    console.log("roomId:", roomId);
+
     const stompClient = new Client({
-      webSocketFactory: () => new SockJS(`wss://43.203.202.100.nip.io/ws`),
+      brokerURL: "wss://43.203.202.100.nip.io/ws",
       connectHeaders: {
         Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
       },
@@ -157,8 +120,8 @@ const ChatDetail = () => {
       onConnect: () => {
         console.log("WebSocket connected");
         setLoading(false);
-        console.log(`Subscribing to /ws/sub/chats/messages/${roomId}`);
         stompClient.subscribe(`/ws/sub/chats/messages/${roomId}`, (message) => {
+          console.log("Received message:", message.body);
           if (message.body) {
             const receivedMessage = JSON.parse(message.body);
             setMessages((prev) => [
