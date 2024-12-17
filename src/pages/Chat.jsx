@@ -93,28 +93,36 @@ const Chat = () => {
   
     const fetchChatList = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
-        const response = await axios.get(`${apiUrl}/api/v1/chats/chattingList/${userInfo.id}`, {
-          headers: { Authorization: `Bearer ${userInfo.jwtToken.accessToken}` },
-        });
+        const apiUrl =
+          import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
+  
+        // URL 경로 수정
+        const response = await axios.get(
+          `${apiUrl}/api/v1/chatRoom/chattingList/${userInfo.id}`,
+          {
+            headers: { Authorization: `Bearer ${userInfo.jwtToken.accessToken}` },
+          }
+        );
   
         console.log("채팅 목록 데이터:", response.data);
   
         if (Array.isArray(response.data.data)) {
-          setChatList(response.data.data);
+          setChatList(response.data.data); // 채팅 목록 설정
         } else {
-          setChatList([]); // 데이터가 없으면 빈 배열 설정
+          setChatList([]); // 빈 배열 처리
         }
       } catch (err) {
         console.error("에러 발생:", err.response || err.message);
-        setError(err.response?.data?.message || "채팅 목록을 불러오는 데 실패했습니다.");
+        setError(
+          err.response?.data?.message || "채팅 목록을 불러오는 데 실패했습니다."
+        );
       } finally {
         setLoading(false);
       }
     };
   
     fetchChatList();
-  }, [userInfo, isLoggedIn, navigate, setChatData]);
+  }, [userInfo, isLoggedIn, navigate]);
   
   return (
     <Container>
