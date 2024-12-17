@@ -112,23 +112,24 @@ const SearchResult = () => {
 
   useEffect(() => {
     // 로컬 스토리지에서 검색 결과와 선택된 카테고리를 가져옴
-    const searchResults = JSON.parse(localStorage.getItem("searchResults")) || [];
+    const searchResults =
+      JSON.parse(localStorage.getItem("searchResults")) || [];
     const selectedKeyword = localStorage.getItem("selectedKeyword") || "";
     const selectedCategory = localStorage.getItem("selectedCategory") || "";
-  
+
     setResults(searchResults);
     setKeyword(selectedKeyword);
     setCategory(selectedCategory);
   }, []);
-  
+
   const [category, setCategory] = useState("");
-  
+
   // 선택된 카테고리를 기반으로 필터링
   const filteredResults = results.filter((product) => {
     const englishCategory = mapCategoryToKeyword(category);
     return englishCategory ? product.keyword === englishCategory : true;
   });
-  
+
   return (
     <Container>
       <Header>
@@ -153,7 +154,9 @@ const SearchResult = () => {
               <div
                 className="product-image"
                 style={{
-                  backgroundImage: `url(${product.productImageUrls?.[0] || "/default-image.png"})`,
+                  backgroundImage: `url(${
+                    product.productImageUrls?.[0] || "/default-image.png"
+                  })`,
                 }}
               />
               <div className="product-details">
@@ -161,7 +164,18 @@ const SearchResult = () => {
                 <span className="product-info">
                   {new Date(product.createdAt).toLocaleDateString()}
                 </span>
-                <span className="product-price">{product.price}원</span>
+                <span className="product-price">
+                  {product.price}원{" "}
+                  <span
+                    style={{
+                      fontWeight: "bold",
+                      color: product.tradeType === "SALE" ? "blue" : "red",
+                      marginLeft: "8px",
+                    }}
+                  >
+                    {product.tradeType === "SALE" ? "판매" : "대여"}
+                  </span>
+                </span>
               </div>
             </ProductCard>
           ))

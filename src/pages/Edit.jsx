@@ -262,7 +262,7 @@ const Edit = () => {
 
   const handleStatusClick = (status) => {
     setInput({ ...input, status });
-  };  
+  };
 
   const handleCancel = () => {
     navigate("/ongoing-transaction");
@@ -300,7 +300,7 @@ const Edit = () => {
         거래중: "RESERVED",
         거래가능: "ACTIVE",
       };
-      
+
       const requestDTO = {
         name: input.productName,
         productContent: input.content,
@@ -309,14 +309,18 @@ const Edit = () => {
         date,
         price: parseInt(input.price, 10),
       };
-      
 
       formData.append("requestDTO", JSON.stringify(requestDTO));
 
       // 이미지 파일 추가
       if (productImages && productImages.length > 0) {
         productImages.forEach((file) => {
-          formData.append("productImages", file);
+          // 기존 이미지 URL과 새 파일을 모두 처리
+          if (typeof file === "string") {
+            formData.append("existingImages", file); // 기존 이미지 URL
+          } else {
+            formData.append("productImages", file); // 새로 업로드한 파일
+          }
         });
       }
 
@@ -369,8 +373,8 @@ const Edit = () => {
   };
 
   const handleFileUpload = (e) => {
-    const files = Array.from(e.target.files); // 파일 배열로 변환
-    setProductImages(files); // 상태에 파일 저장
+    const files = Array.from(e.target.files);
+    setProductImages((prev) => [...prev, ...files]);
   };
 
   const onChangeInput = (e) => {
@@ -387,11 +391,21 @@ const Edit = () => {
       <UploadSection>
         <div className="upload-box">
           <label>
-            {input.image ? (
-              <img src={input.image} alt="미리보기" style={{ width: "100%" }} />
-            ) : (
-              "사진/동영상"
-            )}
+            {productImages.length > 0
+              ? productImages.map((file, index) => (
+                  <img
+                    key={index}
+                    src={
+                      typeof file === "string"
+                        ? file
+                        : URL.createObjectURL(file)
+                    }
+                    alt={`미리보기 ${index + 1}`}
+                    style={{ width: "100px", marginRight: "5px" }}
+                  />
+                ))
+              : "사진/동영상"}
+
             <input
               type="file"
               accept="image/*"

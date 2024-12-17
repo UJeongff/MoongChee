@@ -7,6 +7,13 @@ import Footer from "../components/Footer";
 import Header from "../components/Header";
 import DefaultProfile from "./assets/images/DefaultProfile.png";
 
+const BackButton = styled.span`
+  font-size: 20px;
+  color: #333;
+  cursor: pointer;
+  margin-left: 16px;
+`;
+
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -66,14 +73,19 @@ const ProfileOther = () => {
       if (!userId) return;
 
       try {
-        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
+        const apiUrl =
+          import.meta.env.VITE_REACT_APP_API_URL ||
+          "https://43.203.202.100.nip.io";
         const token = userInfo?.jwtToken?.accessToken;
 
-        const response = await axios.get(`${apiUrl}/api/v1/profile/details/${userId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          `${apiUrl}/api/v1/profile/details/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (response.status === 200) {
           setProfileData(response.data.data);
@@ -101,7 +113,11 @@ const ProfileOther = () => {
   if (!userId) {
     return (
       <Container>
-        <Header>사용자 정보</Header>
+        <Header>
+          <BackButton onClick={() => navigate(-1)}>←</BackButton>
+          사용자 정보
+        </Header>
+
         <Content>
           <p>사용자 정보를 찾을 수 없습니다.</p>
           <button onClick={() => navigate("/")}>홈으로 이동</button>
@@ -133,7 +149,9 @@ const ProfileOther = () => {
             </InfoCard>
             <InfoCard>
               <div className="label">학과</div>
-              <div className="value">{departmentMapping[profileData.department] || "정보 없음"}</div>
+              <div className="value">
+                {departmentMapping[profileData.department] || "정보 없음"}
+              </div>
             </InfoCard>
           </>
         ) : (

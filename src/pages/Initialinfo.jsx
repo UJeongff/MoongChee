@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../contexts/UserContext.jsx";
 
-import axios from "axios";  // axios import 추가
+import axios from "axios"; // axios import 추가
 
 const Container = styled.div`
   display: flex;
@@ -63,7 +63,6 @@ const InputGroup = styled.div`
   }
 `;
 
-
 const ImagePreview = styled.img`
   width: 100px;
   height: 100px;
@@ -111,7 +110,6 @@ const SaveButton = styled.button`
   }
 `;
 
-
 const InitialInfo = () => {
   const { setUserInfo } = useContext(UserContext);
   const navigate = useNavigate();
@@ -153,10 +151,12 @@ const InitialInfo = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!selectedFile) newErrors.profileImage = "프로필 이미지를 업로드해주세요.";
+    if (!selectedFile)
+      newErrors.profileImage = "프로필 이미지를 업로드해주세요.";
     if (!form.email.trim()) newErrors.email = "이메일을 입력해주세요.";
     if (!form.phone.trim()) newErrors.phone = "핸드폰 번호를 입력해주세요.";
-    if (!form.birthDate.trim()) newErrors.birthDate = "생년월일을 선택해주세요.";
+    if (!form.birthDate.trim())
+      newErrors.birthDate = "생년월일을 선택해주세요.";
     if (!form.department.trim()) newErrors.department = "학과를 입력해주세요.";
     if (!form.studentId.trim()) newErrors.studentId = "학번을 입력해주세요.";
     if (!agreement) newErrors.agreement = "동의해야 저장이 가능합니다.";
@@ -226,8 +226,8 @@ const InitialInfo = () => {
             localStorage.setItem("refreshToken", data.jwtToken.refreshToken);
           }
 
-          // 프로필 페이지로 이동
-          navigate("/profile");
+          // 메인 페이지로 이동
+          navigate("/");
         }
       } catch (error) {
         console.error("정보 저장 오류:", error);
@@ -246,10 +246,7 @@ const InitialInfo = () => {
         <InputGroup>
           <label>프로필 이미지</label>
           {selectedFile && (
-            <ImagePreview
-              src={form.profileImage}
-              alt="프로필 미리보기"
-            />
+            <ImagePreview src={form.profileImage} alt="프로필 미리보기" />
           )}
           <input
             type="file"
@@ -257,7 +254,9 @@ const InitialInfo = () => {
             accept="image/*"
             onChange={handleImageUpload}
           />
-          {errors.profileImage && <div className="error">{errors.profileImage}</div>}
+          {errors.profileImage && (
+            <div className="error">{errors.profileImage}</div>
+          )}
         </InputGroup>
         <InputGroup>
           <label>이메일</label>
@@ -291,7 +290,11 @@ const InitialInfo = () => {
         </InputGroup>
         <InputGroup>
           <label>학과</label>
-          <select name="department" value={form.department} onChange={handleChange}>
+          <select
+            name="department"
+            value={form.department}
+            onChange={handleChange}
+          >
             <option value="">학과를 선택해주세요</option>
             <option value="SW">소프트웨어전공</option>
             <option value="AI">인공지능전공</option>
@@ -301,7 +304,9 @@ const InitialInfo = () => {
             <option value="BUSINESS">경영학과</option>
             <option value="ECONOMICS">경제학과</option>
           </select>
-          {errors.department && <div className="error">{errors.department}</div>}
+          {errors.department && (
+            <div className="error">{errors.department}</div>
+          )}
         </InputGroup>
 
         <InputGroup>
@@ -324,7 +329,8 @@ const InitialInfo = () => {
             }}
           />
           <label>
-            사기 행각 발각 시 거래 품목 원가의 10배에 해당하는 벌금을 지불할 것에 동의합니다
+            사기 행각 발각 시 거래 품목 원가의 10배에 해당하는 벌금을 지불할
+            것에 동의합니다
           </label>
         </AgreementSection>
         {errors.agreement && <div className="error">{errors.agreement}</div>}

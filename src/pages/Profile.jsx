@@ -1,10 +1,19 @@
 import React, { useEffect, useState, useContext } from "react";
 import styled from "styled-components";
 import { UserContext } from "../contexts/UserContext.jsx";
-
+import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import axios from "axios";
+
+const BackButton = styled.span`
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  font-size: 20px;
+  color: #333;
+  cursor: pointer;
+`;
 
 const Container = styled.div`
   display: flex;
@@ -54,11 +63,11 @@ const departmentMap = {
   ECONOMICS: "경제학과",
 };
 
-
 const Profile = () => {
   const { userInfo, setUserInfo, isLoggedIn } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const navigate = useNavigate();
 
   // 로그인 여부 확인
   // 로그인 안 되어 있으면 에러 처리 또는 리다이렉트
@@ -84,11 +93,14 @@ const Profile = () => {
         return;
       }
 
-      const response = await axios.get(`${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/profile/details`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const response = await axios.get(
+        `${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/profile/details`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
       if (response.status === 200) {
         const data = response.data.data;
@@ -140,7 +152,6 @@ const Profile = () => {
   const getDepartmentName = (department) => {
     return departmentMap[department] || "학과를 입력해주세요";
   };
-  
 
   // 기본값을 제공하는 profileData 정의
   const profileData = {
@@ -151,10 +162,10 @@ const Profile = () => {
     department: getDepartmentName(userInfo?.department),
     studentId: userInfo?.studentNumber || "학번을 입력해주세요",
   };
-  
 
   return (
     <Container>
+      <BackButton onClick={() => navigate("/mypage")}>←</BackButton>
       <Header title="프로필" />
       <Content>
         <InfoCard>

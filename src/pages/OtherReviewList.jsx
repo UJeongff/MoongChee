@@ -1,10 +1,19 @@
 import React, { useEffect, useState, useContext } from "react";
 import styled from "styled-components";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { UserContext } from "../contexts/UserContext.jsx";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+
+const BackButton = styled.span`
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  font-size: 20px;
+  color: #333;
+  cursor: pointer;
+`;
 
 const Container = styled.div`
   display: flex;
@@ -93,20 +102,26 @@ const convertRatingToStars = (rating) => {
 const OtherReviewList = () => {
   const { userId } = useParams();
   const { userInfo } = useContext(UserContext);
+  const navigate = useNavigate();
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+        const apiUrl =
+          import.meta.env.VITE_REACT_APP_API_URL ||
+          "http://43.203.202.100:8080";
         const token = userInfo?.jwtToken?.accessToken;
 
-        const response = await axios.get(`${apiUrl}/api/v1/reviews/user/${userId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          `${apiUrl}/api/v1/reviews/user/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (response.status === 200) {
           setReviews(response.data.data.reviews);
@@ -125,6 +140,7 @@ const OtherReviewList = () => {
 
   return (
     <Container>
+      <BackButton onClick={() => navigate(`/product/${userId}`)}>←</BackButton>
       <Header title="상대방 리뷰" />
       <Content>
         {loading ? (
@@ -138,9 +154,13 @@ const OtherReviewList = () => {
                 alt="상품 이미지"
               />
               <div className="review-content">
-                <div className="rating">{convertRatingToStars(review.reviewScore)}</div>
+                <div className="rating">
+                  {convertRatingToStars(review.reviewScore)}
+                </div>
                 <div className="content">{review.reviewContent}</div>
-                <div className="date">{new Date(review.createdAt).toLocaleDateString()}</div>
+                <div className="date">
+                  {new Date(review.createdAt).toLocaleDateString()}
+                </div>
               </div>
             </ReviewCard>
           ))

@@ -307,9 +307,9 @@ const Register = () => {
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files);
     if (files.length > 0) {
-      setSelectedFiles(files);
+      setSelectedFiles((prevFiles) => [...prevFiles, ...files]);
       const previews = files.map((file) => URL.createObjectURL(file));
-      setPreviewImages(previews);
+      setPreviewImages((prevPreviews) => [...prevPreviews, ...previews]);
     }
   };
 
@@ -422,15 +422,22 @@ const Register = () => {
     <Container>
       <Header>상품 등록</Header>
       <UploadSection>
-        <div className="upload-box" onClick={() => fileInputRef.current.click()}>
-          {previewImages.length > 0 ? (
-            previewImages.map((src, index) => (
-              <img key={index} src={src} alt={`미리보기 ${index + 1}`} />
-            ))
-          ) : (
-            "사진/동영상 업로드"
-          )}
+        <div
+          className="upload-box"
+          onClick={() => fileInputRef.current.click()}
+        >
+          {previewImages.length > 0
+            ? previewImages.map((src, index) => (
+                <img
+                  key={index}
+                  src={src}
+                  alt={`미리보기 ${index + 1}`}
+                  style={{ marginRight: "5px" }}
+                />
+              ))
+            : "사진/동영상 업로드"}
         </div>
+
         <input
           ref={fileInputRef}
           type="file"
@@ -447,20 +454,24 @@ const Register = () => {
           value={input.productName}
           onChange={onChangeInput}
         />
-        {errors.productName && <span className="error">{errors.productName}</span>}
+        {errors.productName && (
+          <span className="error">{errors.productName}</span>
+        )}
       </InputRow>
       <CategorySection>
         <h4>카테고리</h4>
         <CategoryList>
-          {["서적", "생활용품", "전자제품", "의류", "잡화", "기타"].map((category) => (
-            <button
-              key={category}
-              onClick={() => handleCategoryClick(category)}
-              className={selectedCategory === category ? "selected" : ""}
-            >
-              {category}
-            </button>
-          ))}
+          {["서적", "생활용품", "전자제품", "의류", "잡화", "기타"].map(
+            (category) => (
+              <button
+                key={category}
+                onClick={() => handleCategoryClick(category)}
+                className={selectedCategory === category ? "selected" : ""}
+              >
+                {category}
+              </button>
+            )
+          )}
         </CategoryList>
         {errors.keyword && <span className="error">{errors.keyword}</span>}
       </CategorySection>
@@ -490,7 +501,7 @@ const Register = () => {
       <InputRow>
         <label>거래/반납 날짜</label>
         <input
-          type="date" 
+          type="date"
           name="date"
           value={input.date}
           onChange={onChangeInput}
@@ -510,7 +521,11 @@ const Register = () => {
         <button className="cancel-btn" onClick={handleCancel}>
           취소
         </button>
-        <button className="submit-btn" onClick={handleSubmit} disabled={loading}>
+        <button
+          className="submit-btn"
+          onClick={handleSubmit}
+          disabled={loading}
+        >
           등록
         </button>
       </ButtonContainer>
@@ -530,10 +545,15 @@ const Register = () => {
             </ToggleButton>
             {activeTerms.term1 && (
               <TermsContent>
-                - 대여자는 반드시 반납 날짜까지 대여 상품을 반납해야 한다.<br />
-                - 반납 날짜까지 반납하지 않을 시 보증금을 돌려받지 못하며 최대 3일 이내 반드시 반납해야 한다.<br />
-                - 3일 이후에도 반납하지 않을 시, 대여 상품 원가에 해당하는 금액을 지급해야 하며 최대 5일 이내로 반드시 반납해야 한다.<br />
-                - 만약 그 이후에도 반납하지 않을 시 형법 제355조에 의거, 횡령죄로 간주하여 법적인 처벌을 받을 수 있다.
+                - 대여자는 반드시 반납 날짜까지 대여 상품을 반납해야 한다.
+                <br />
+                - 반납 날짜까지 반납하지 않을 시 보증금을 돌려받지 못하며 최대
+                3일 이내 반드시 반납해야 한다.
+                <br />
+                - 3일 이후에도 반납하지 않을 시, 대여 상품 원가에 해당하는
+                금액을 지급해야 하며 최대 5일 이내로 반드시 반납해야 한다.
+                <br />- 만약 그 이후에도 반납하지 않을 시 형법 제355조에 의거,
+                횡령죄로 간주하여 법적인 처벌을 받을 수 있다.
               </TermsContent>
             )}
           </TermsSection>
@@ -549,13 +569,22 @@ const Register = () => {
             </ToggleButton>
             {activeTerms.term2 && (
               <TermsContent>
-                상품 소유주는 상품 등록 시 상품의 정확한 사진을 등록하여 반납 시 상태와 확실한 구별이 가능하게 한다.
-                만약 소유주의 실수로 대여 전후 상태의 차이 확인이 불가능할 경우 소유주의 책임으로 간주한다.
-                대여자는 상품 반납 시, 대여 전과 동일한 상태를 유지해야 한다. 맨눈으로 확인할 수 있는 찍힘, 긁힘, 오염 등의 파손의 경우 대여자는 수리비 전액을 지급해야 한다.
+                상품 소유주는 상품 등록 시 상품의 정확한 사진을 등록하여 반납 시
+                상태와 확실한 구별이 가능하게 한다. 만약 소유주의 실수로 대여
+                전후 상태의 차이 확인이 불가능할 경우 소유주의 책임으로
+                간주한다. 대여자는 상품 반납 시, 대여 전과 동일한 상태를
+                유지해야 한다. 맨눈으로 확인할 수 있는 찍힘, 긁힘, 오염 등의
+                파손의 경우 대여자는 수리비 전액을 지급해야 한다.
                 <br />
                 <br />
-                서적의 경우 상품의 소유주는 대여자의 추가적인 필기가 가능함에 동의한다. 단, 서적의 원본 글씨를 알아볼 수 없을 정도의 낙서가 생겼을 경우, 해당 경우는 파손으로 간주, 대여자는 소유주에게 전공 서적 원가의 절반에 해당하는 금액을 지불한다.
-                상품의 소유주는 서적의 특성상 서적의 약간의 구겨짐, 찢어짐 등 약간의 훼손은 불가피함에 동의한다. 단, 서적을 읽음에 있어 글씨의 정확한 확인이 불가능할 정도의 훼손은 파손으로 간주, 대여자는 소유주에게 전공 서적 원가의 절반에 해당하는 금액을 지불한다.
+                서적의 경우 상품의 소유주는 대여자의 추가적인 필기가 가능함에
+                동의한다. 단, 서적의 원본 글씨를 알아볼 수 없을 정도의 낙서가
+                생겼을 경우, 해당 경우는 파손으로 간주, 대여자는 소유주에게 전공
+                서적 원가의 절반에 해당하는 금액을 지불한다. 상품의 소유주는
+                서적의 특성상 서적의 약간의 구겨짐, 찢어짐 등 약간의 훼손은
+                불가피함에 동의한다. 단, 서적을 읽음에 있어 글씨의 정확한 확인이
+                불가능할 정도의 훼손은 파손으로 간주, 대여자는 소유주에게 전공
+                서적 원가의 절반에 해당하는 금액을 지불한다.
               </TermsContent>
             )}
           </TermsSection>
@@ -579,7 +608,9 @@ const Register = () => {
               disabled={!checklist.termsConfirmed || loading}
               onClick={handleRegisterConfirm}
               style={{
-                backgroundColor: checklist.termsConfirmed ? "#007bff" : "#f0f0f0",
+                backgroundColor: checklist.termsConfirmed
+                  ? "#007bff"
+                  : "#f0f0f0",
                 color: checklist.termsConfirmed ? "white" : "#888",
               }}
             >

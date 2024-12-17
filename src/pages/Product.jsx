@@ -21,14 +21,27 @@ const Container = styled.div`
 
 const Header = styled.header`
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: space-between;
   width: 100%;
   height: 60px;
   background-color: white;
   font-weight: bold;
   font-size: 20px;
   border-bottom: 1px solid #ddd;
+
+  .back-icon {
+    font-size: 20px;
+    color: #333;
+    cursor: pointer;
+    margin-left: 16px;
+  }
+
+  .title {
+    flex: 1;
+    text-align: center;
+    margin-right: 36px;
+  }
 `;
 
 const ProductDetails = styled.div`
@@ -287,17 +300,22 @@ const Product = () => {
   useEffect(() => {
     const fetchUserReviews = async () => {
       if (!product?.userId) return;
-  
+
       try {
-        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+        const apiUrl =
+          import.meta.env.VITE_REACT_APP_API_URL ||
+          "http://43.203.202.100:8080";
         const token = userInfo?.jwtToken?.accessToken;
-  
-        const response = await axios.get(`${apiUrl}/api/v1/reviews/user/${product.userId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-  
+
+        const response = await axios.get(
+          `${apiUrl}/api/v1/reviews/user/${product.userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
         if (response.status === 200) {
           setReviews(response.data.data.reviews);
         }
@@ -305,7 +323,7 @@ const Product = () => {
         console.error("리뷰 데이터 로드 에러:", error);
       }
     };
-  
+
     fetchUserReviews();
   }, [product, userInfo]);
 
@@ -314,28 +332,37 @@ const Product = () => {
   useEffect(() => {
     const checkIfFavorite = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
-        const response = await axios.get(`${apiUrl}/api/v1/profile/my-like-posts`, {
-          headers: {
-            Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
-          },
-        });
-  
+        const apiUrl =
+          import.meta.env.VITE_REACT_APP_API_URL ||
+          "http://43.203.202.100:8080";
+        const response = await axios.get(
+          `${apiUrl}/api/v1/profile/my-like-posts`,
+          {
+            headers: {
+              Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
+            },
+          }
+        );
+
         if (response.status === 200) {
           const favoritePosts = response.data.data;
-          const isCurrentProductFavorite = favoritePosts.some((fav) => fav.postId === product.postId);
+          const isCurrentProductFavorite = favoritePosts.some(
+            (fav) => fav.postId === product.postId
+          );
           setIsFavorite(isCurrentProductFavorite);
         }
       } catch (error) {
-        console.error("관심 상태 확인 에러:", error.response?.data || error.message);
+        console.error(
+          "관심 상태 확인 에러:",
+          error.response?.data || error.message
+        );
       }
     };
-  
+
     if (product) {
       checkIfFavorite();
     }
   }, [product, userInfo]);
-  
 
   const handleFavoriteToggle = async () => {
     if (!product || !product.postId) {
@@ -344,7 +371,8 @@ const Product = () => {
     }
 
     try {
-      const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+      const apiUrl =
+        import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
       const url = `${apiUrl}/api/v1/posts/like/${product.postId}`;
 
       if (isFavorite) {
@@ -356,7 +384,9 @@ const Product = () => {
         });
         alert("관심 등록이 취소되었습니다.");
         setIsFavorite(false);
-        setFavoriteProducts((prev) => prev.filter((fav) => fav.postId !== product.postId));
+        setFavoriteProducts((prev) =>
+          prev.filter((fav) => fav.postId !== product.postId)
+        );
       } else {
         // 관심 등록
         await axios.post(url, null, {
@@ -369,8 +399,14 @@ const Product = () => {
         setFavoriteProducts((prev) => [...prev, product]);
       }
     } catch (error) {
-      console.error("관심 등록/해제 에러:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "관심 등록/해제 중 오류가 발생했습니다.");
+      console.error(
+        "관심 등록/해제 에러:",
+        error.response?.data || error.message
+      );
+      alert(
+        error.response?.data?.message ||
+          "관심 등록/해제 중 오류가 발생했습니다."
+      );
     }
   };
 
@@ -379,25 +415,27 @@ const Product = () => {
       alert("상품 정보를 불러오지 못했습니다.");
       return;
     }
-  
+
     try {
-      const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
+      const apiUrl =
+        import.meta.env.VITE_REACT_APP_API_URL ||
+        "https://43.203.202.100.nip.io";
       const buyerId = userInfo.id;
       const sellerId = product.userId;
-  
+
       console.log(`POST 요청 URL: ${apiUrl}/api/v1/chatRooms`);
       console.log(`요청 본문:`, { user1Id: buyerId, user2Id: sellerId });
-  
+
       const response = await axios.post(
         `${apiUrl}/api/v1/chatRooms`,
-        { user1Id: buyerId, user2Id: sellerId },  // 올바른 request body
+        { user1Id: buyerId, user2Id: sellerId }, // 올바른 request body
         {
           headers: {
             Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
           },
         }
       );
-  
+
       if (response.status === 200 || response.status === 201) {
         const roomId = response.data.data.roomId;
         navigate(`/chat/${roomId}`);
@@ -406,9 +444,11 @@ const Product = () => {
       }
     } catch (error) {
       console.error("채팅방 생성 에러:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "채팅방 생성 중 오류가 발생했습니다.");
+      alert(
+        error.response?.data?.message || "채팅방 생성 중 오류가 발생했습니다."
+      );
     }
-  };  
+  };
 
   const confirmChat = () => {
     if (!product) return;
@@ -430,18 +470,19 @@ const Product = () => {
     const fetchProduct = async () => {
       try {
         const apiUrl =
-          import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080/api/v1";
-  
+          import.meta.env.VITE_REACT_APP_API_URL ||
+          "http://43.203.202.100:8080/api/v1";
+
         const response = await fetch(`${apiUrl}/api/v1/posts/${id}`, {
           headers: {
             Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
           },
         });
-  
+
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-  
+
         const result = await response.json();
         console.log("Fetched product:", result.data); // product 데이터 확인
         setProduct(result.data);
@@ -449,10 +490,9 @@ const Product = () => {
         console.error("상품 데이터 로드 에러:", error);
       }
     };
-  
+
     fetchProduct();
   }, [id, userInfo]);
-  
 
   const getTradeTypeLabel = (tradeType) => {
     return tradeType === "RENTAL" ? "대여" : "판매";
@@ -475,10 +515,9 @@ const Product = () => {
       four: 4,
       five: 5,
     };
-  
+
     return ratingMap[rating.toLowerCase()] || 0;
   };
-  
 
   const getCategoryLabel = (keyword) => {
     return keywordToCategoryMap[keyword] || "기타";
@@ -516,7 +555,12 @@ const Product = () => {
 
   return (
     <Container>
-      <Header>상품 상세 정보</Header>
+      <Header>
+        <div className="back-icon" onClick={() => navigate("/")}>
+          ←
+        </div>
+        <div className="title">상품 상세 정보</div>
+      </Header>
       <ProductDetails>
         <ProductImage
           src={product.productImageUrls?.[0] || "/default-image.png"}
@@ -568,9 +612,9 @@ const Product = () => {
           <div className="value">{product.price}원</div>
         </InfoRow>
         <ButtonContainer>
-        <button className="chat-btn" onClick={createChatRoom}>
-          1:1 채팅
-        </button>
+          <button className="chat-btn" onClick={createChatRoom}>
+            1:1 채팅
+          </button>
           <button className="heart-btn" onClick={handleFavoriteToggle}>
             {isFavorite ? (
               <span className="heart">❤️</span>
@@ -683,4 +727,4 @@ const Product = () => {
   );
 };
 
-export default Product; 
+export default Product;

@@ -29,7 +29,7 @@ const OAuthCallback = () => {
     setUserInfo(updatedUserInfo);
 
     // 페이지 이동
-    navigate("/profile");
+    navigate("/");
   };
 
   const handleInit = () => {
@@ -42,21 +42,28 @@ const OAuthCallback = () => {
 
     const handleLoginPost = async (authCode) => {
       try {
-        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+        const apiUrl =
+          import.meta.env.VITE_REACT_APP_API_URL ||
+          "http://43.203.202.100:8080";
 
         console.log("Sending request to backend with code:", authCode);
 
-        const response = await fetch(`${apiUrl}/api/v1/users/login?code=${authCode}`, {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await fetch(
+          `${apiUrl}/api/v1/users/login?code=${authCode}`,
+          {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         if (!response.ok) {
           const errorResponse = await response.json();
-          throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorResponse.message}`);
+          throw new Error(
+            `HTTP error! Status: ${response.status}, Message: ${errorResponse.message}`
+          );
         }
 
         const data = await response.json();
