@@ -137,22 +137,21 @@ const InitialInfo = () => {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // 파일 객체 저장
       setSelectedFile(file);
-
-      // 이미지 미리보기 설정을 위해 FileReader 사용
       const reader = new FileReader();
       reader.onloadend = () => {
         setForm({ ...form, profileImage: reader.result });
       };
       reader.readAsDataURL(file);
+    } else {
+      setSelectedFile(null);  // 파일을 선택하지 않으면 selectedFile을 null로 설정
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
     if (!selectedFile)
-      newErrors.profileImage = "프로필 이미지를 업로드해주세요.";
+      newErrors.profileImage = "학생증 이미지를 업로드해주세요.";
     if (!form.email.trim()) newErrors.email = "이메일을 입력해주세요.";
     if (!form.phone.trim()) newErrors.phone = "핸드폰 번호를 입력해주세요.";
     if (!form.birthDate.trim())
@@ -244,9 +243,12 @@ const InitialInfo = () => {
       <Header>초기 정보 입력</Header>
       <Content>
         <InputGroup>
-          <label>프로필 이미지</label>
-          {selectedFile && (
-            <ImagePreview src={form.profileImage} alt="프로필 미리보기" />
+        <div>
+          <label>학생증 사진을 첨부하세요</label>
+          {selectedFile ? (
+            <span>선택된 파일: {selectedFile.name}</span>
+          ) : (
+            <span>학생증 사진이 선택되지 않았습니다.</span>
           )}
           <input
             type="file"
@@ -254,9 +256,8 @@ const InitialInfo = () => {
             accept="image/*"
             onChange={handleImageUpload}
           />
-          {errors.profileImage && (
-            <div className="error">{errors.profileImage}</div>
-          )}
+          {errors.profileImage && <div className="error">{errors.profileImage}</div>}
+        </div>
         </InputGroup>
         <InputGroup>
           <label>이메일</label>
