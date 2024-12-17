@@ -140,6 +140,7 @@ const ChatDetail = () => {
           }
         });
       },
+      
       onStompError: (frame) => {
         console.error("WebSocket error:", frame);
         alert("WebSocket 연결에 실패했습니다.");
