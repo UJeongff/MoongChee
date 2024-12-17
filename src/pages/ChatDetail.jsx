@@ -24,9 +24,7 @@ const Header = styled.header`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
   height: 60px;
-  background-color: white;
   font-weight: bold;
   font-size: 20px;
   border-bottom: 1px solid #ddd;
@@ -113,6 +111,7 @@ const ChatDetail = () => {
 
   // 채팅 메시지 로딩
   const fetchMessages = async () => {
+    console.log("Fetching messages for roomId:", roomId); // 로그 추가
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/chats/chatting/${roomId}/${page}/${size}`,
@@ -122,8 +121,11 @@ const ChatDetail = () => {
           },
         }
       );
-      if (response.data) {
+      if (response.data && response.data.data) {
+        console.log("Messages fetched:", response.data.data); // 로그 추가
         setMessages(response.data.data);
+      } else {
+        console.log("No messages found.");
       }
     } catch (error) {
       console.error("Failed to fetch messages:", error);
