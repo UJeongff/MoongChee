@@ -489,7 +489,7 @@ const Product = () => {
   
     if (buyerId === sellerId) {
       alert("본인에게 채팅을 보낼 수 없습니다.");
-      return null; // 실패 시 null 반환
+      return null;
     }
   
     const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
@@ -504,6 +504,7 @@ const Product = () => {
       );
   
       if (checkResponse.status === 200 && checkResponse.data?.data?.roomId) {
+        console.log("Existing room found:", checkResponse.data.data.roomId);
         return checkResponse.data.data.roomId; // 기존 채팅방 roomId 반환
       }
     } catch (error) {
@@ -521,6 +522,7 @@ const Product = () => {
       );
   
       if (createResponse.status === 200 || createResponse.status === 201) {
+        console.log("New room created:", createResponse.data.data.roomId);
         return createResponse.data.data.roomId; // 새 채팅방 roomId 반환
       }
     } catch (error) {
@@ -538,7 +540,7 @@ const Product = () => {
       [chatId]: { product, messages: [] },
     }));
     setIsModalOpen(false);
-    navigate(`/chat/${chatId}`);
+    navigate(`/chat/${roomId}`);
   };
 
   const handleCheckboxChange = (e) => {
@@ -827,7 +829,10 @@ const Product = () => {
                 const roomId = await createChatRoom(); // 채팅방 생성 후 roomId 반환
                 if (roomId) {
                   setIsModalOpen(false); // 모달 닫기
+                  console.log("Navigating to chat room:", roomId);  // roomId 값 확인
                   navigate(`/chat/${roomId}`); // 올바른 roomId로 이동
+                } else {
+                  alert("채팅방 생성에 실패했습니다.");
                 }
               }}
             >

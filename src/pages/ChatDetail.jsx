@@ -99,6 +99,7 @@ const Loading = styled.div`
 
 const ChatDetail = () => {
   const { id: roomId } = useParams();
+  console.log("roomId from useParams:", roomId);
   const { userInfo } = useContext(UserContext);
   const navigate = useNavigate();
   const [client, setClient] = useState(null);
