@@ -827,10 +827,10 @@ const Product = () => {
               }}
               onClick={async () => {
                 const roomId = await createChatRoom(); // 채팅방 생성 후 roomId 반환
+                console.log("roomId from createChatRoom:", roomId);
                 if (roomId) {
                   setIsModalOpen(false); // 모달 닫기
-                  console.log("Navigating to chat room:", roomId);  // roomId 값 확인
-                  navigate(`/chat/${roomId.toString()}`); // 올바른 roomId로 이동
+                  navigate(`/chat/${roomId}`); // 올바른 roomId로 이동
                 } else {
                   alert("채팅방 생성에 실패했습니다.");
                 }
