@@ -216,6 +216,7 @@ const Edit = () => {
     closedProducts,
     setClosedProducts,
   } = useContext(UserContext);
+  const fileInputRef = useRef(null);
 
   const categoryToKeywordMap = {
     서적: "BOOK",
@@ -472,23 +473,14 @@ const Edit = () => {
           </div>
         )}
         <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={(e) => {
-            const files = Array.from(e.target.files);
-            if (
-              existingImages.length + productImages.length + files.length >
-              10
-            ) {
-              alert("이미지는 최대 10장까지 등록할 수 있습니다.");
-              return;
-            }
-            setProductImages((prev) => [...prev, ...files]);
-          }}
-        />
-      </UploadSection>
+        ref={fileInputRef} // input 참조
+        type="file"
+        accept="image/*"
+        multiple
+        style={{ display: "none" }} // 숨김 처리
+        onChange={handleFileUpload} // 파일 선택 핸들러
+      />
+    </UploadSection>
 
       <InputRow>
         <label>상품명</label>
