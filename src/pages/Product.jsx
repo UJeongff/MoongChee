@@ -44,17 +44,50 @@ const Header = styled.header`
   }
 `;
 
-const ProductDetails = styled.div`
-  flex: 1;
-  padding: 16px;
+const ProductImageContainer = styled.div`
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  border-radius: 8px;
+  margin-bottom: 16px;
 `;
 
 const ProductImage = styled.img`
   width: 100%;
-  height: 200px;
+  height: 100%;
   object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 16px;
+`;
+
+const ArrowButton = styled.button`
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  font-size: 18px;
+  z-index: 1;
+  border-radius: 50%;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+
+  &.left {
+    left: 10px;
+  }
+
+  &.right {
+    right: 10px;
+  }
+`;
+
+const ProductDetails = styled.div`
+  flex: 1;
+  padding: 16px;
 `;
 
 const ProductHeader = styled.div`
@@ -296,6 +329,22 @@ const Product = () => {
     const foundProduct = ongoingProducts.find((item) => item.id === Number(id));
     setProduct(foundProduct || null);
   }, [id, ongoingProducts]);
+
+  const nextImage = () => {
+    if (product?.productImageUrls) {
+      setCurrentImageIndex((prevIndex) =>
+        prevIndex === product.productImageUrls.length - 1 ? 0 : prevIndex + 1
+      );
+    }
+  };
+
+  const prevImage = () => {
+    if (product?.productImageUrls) {
+      setCurrentImageIndex((prevIndex) =>
+        prevIndex === 0 ? product.productImageUrls.length - 1 : prevIndex - 1
+      );
+    }
+  };
 
   useEffect(() => {
     const fetchUserReviews = async () => {
@@ -557,6 +606,22 @@ const Product = () => {
         </div>
         <div className="title">상품 상세 정보</div>
       </Header>
+      <ProductImageContainer>
+        {product.productImageUrls && product.productImageUrls.length > 0 && (
+          <>
+            <ArrowButton className="left" onClick={prevImage}>
+              &#8592;
+            </ArrowButton>
+            <ProductImage
+              src={product.productImageUrls[currentImageIndex] || "/default-image.png"}
+              alt={`상품 이미지 ${currentImageIndex + 1}`}
+            />
+            <ArrowButton className="right" onClick={nextImage}>
+              &#8594;
+            </ArrowButton>
+          </>
+        )}
+      </ProductImageContainer>
       <ProductDetails>
         <ProductImage
           src={product.productImageUrls?.[0] || "/default-image.png"}
