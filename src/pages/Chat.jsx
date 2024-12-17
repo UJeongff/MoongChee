@@ -104,7 +104,7 @@ const Chat = () => {
           }
         );
 
-        console.log("채팅 목록 응답:", response.data);
+        console.log("채팅 목록 응답:", response.data);  // 응답 데이터 확인
 
         if (response.data.code === 200 && Array.isArray(response.data.data)) {
           setChatList(response.data.data);
