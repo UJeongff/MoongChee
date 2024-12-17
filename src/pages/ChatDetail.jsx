@@ -160,9 +160,11 @@ const ChatDetail = () => {
       onConnect: () => {
         console.log("WebSocket connected");
         setLoading(false);
+        console.log(`Subscribing to /ws/sub/chats/messages/${roomId}`);
         stompClient.subscribe(`/ws/sub/chats/messages/${roomId}`, (message) => {
           if (message.body) {
             const receivedMessage = JSON.parse(message.body);
+            console.log("Received message:", receivedMessage);
             setMessages((prev) => [
               ...prev,
               {
@@ -201,7 +203,11 @@ const ChatDetail = () => {
       try {
         client.publish({
           destination: "/ws/pub/chats/messages",
-          body: JSON.stringify({ roomId, senderId: userInfo.id, content: input.trim() }),
+          body: JSON.stringify({ roomId, 
+            senderId: userInfo.id, 
+            senderName: userInfo.name || "Anonymous",
+            content: input.trim() 
+          }),
         });
         setInput("");
       } catch (error) {
