@@ -264,9 +264,10 @@ const Edit = () => {
             Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
           },
         });
-
+  
         if (response.status === 200) {
           const productData = response.data.data;
+  
           setInput({
             productName: productData.name || "",
             content: productData.productContent || "",
@@ -274,18 +275,20 @@ const Edit = () => {
             status: statusMappingToKorean[productData.postStatus] || "거래가능",
             possibleDate: productData.date || "",
             price: productData.price || "",
-            image: productData.productImageUrls?.[0] || "",
           });
+  
+          // 기존 이미지 URL 설정
+          setExistingImages(productData.productImageUrls || []);
         }
       } catch (error) {
         console.error("상품 상세 정보 로드 에러:", error);
         alert("상품 정보를 가져오는 중 오류가 발생했습니다.");
       }
     };
-
+  
     fetchProductDetails();
   }, [id, userInfo]);
-
+  
   const handleCategoryClick = (category) => {
     setInput({ ...input, category });
   };
