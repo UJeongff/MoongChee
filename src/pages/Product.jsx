@@ -66,22 +66,23 @@ const ProductImage = styled.img`
 const FullScreenModal = styled.div`
   position: fixed;
   top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 50%; /* 중앙 정렬 */
+  transform: translateX(-50%); /* 중앙 정렬 */
+  width: 100%;
+  max-width: 393px; /* 헤더 및 푸터와 같은 최대 너비 */
+  height: 100%;
   background: rgba(0, 0, 0, 0.8);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  padding: 16px; /* 화면 테두리와의 간격 추가 */
+  padding: 16px;
 `;
 
 const FullScreenImage = styled.img`
   width: 100%;
-  max-width: 100%;    /* 화면의 너비를 초과하지 않도록 설정 */
   height: auto;
-  max-height: 100%;   /* 화면의 높이를 초과하지 않도록 설정 */
+  max-height: 100%;
   object-fit: contain;
   border-radius: 8px;
 `;
