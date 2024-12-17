@@ -5,6 +5,7 @@ import { UserContext } from "../contexts/UserContext.jsx";
 import Footer from "../components/Footer";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
+import axios from "axios";
 
 // Styled Components 정의
 const Container = styled.div`
@@ -100,38 +101,53 @@ const Loading = styled.div`
 
 const ChatDetail = () => {
   const { roomId } = useParams();  // 여기서 roomId를 가져옵니다.
-  const [resolvedRoomId, setResolvedRoomId] = useState(null); // roomId 상태 저장
   const { userInfo } = useContext(UserContext);
   const navigate = useNavigate();
   const [client, setClient] = useState(null);
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState([]); // 채팅 메시지 상태
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
 
+  // 채팅 내역을 서버에서 불러오는 함수
+  const fetchChatMessages = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/chats/chatting/${roomId}/1/50`,
+        {
+          headers: {
+            Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
+          },
+        }
+      );
+      if (response.status === 200) {
+        setMessages(response.data);
+      }
+    } catch (error) {
+      console.error("채팅 내역을 가져오는 중 에러 발생:", error);
+    }
+  };
+
   useEffect(() => {
     if (!roomId) {
-      console.log("roomId is missing, redirecting to chat list...");
       navigate("/chat"); // roomId가 없으면 채팅 목록으로 이동
       return;
     }
-  
-    setResolvedRoomId(roomId); // roomId가 있으면 상태에 저장
-    console.log("roomId:", roomId);
-  
+
+    fetchChatMessages(); // 채팅 내역을 서버에서 가져옵니다.
+
     const stompClient = new Client({
-      // brokerURL 대신 webSocketFactory 사용
       webSocketFactory: () => new SockJS("https://43.203.202.100.nip.io/ws"),
       connectHeaders: {
         Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
       },
-      reconnectDelay: 5000, // 5초 후 재연결 시도
+      reconnectDelay: 5000,
       onConnect: (frame) => {
         console.log("WebSocket connected:", frame);
         setLoading(false);
-  
+
         const subscriptionPath = `/sub/chats/${roomId}`;
         console.log("Subscribing to:", subscriptionPath);
-  
+
         stompClient.subscribe(subscriptionPath, (message) => {
           console.log("Received message:", message.body);
           if (message.body) {
@@ -152,20 +168,16 @@ const ChatDetail = () => {
         setLoading(false);
         navigate("/chat");
       },
-      onDisconnect: () => {
-        console.warn("WebSocket disconnected. Attempting to reconnect...");
-      },
     });
-  
+
     stompClient.activate();
     setClient(stompClient);
-  
+
     return () => {
-      console.log("WebSocket connection deactivating...");
       stompClient.deactivate();
     };
   }, [roomId, userInfo, navigate]);
-  
+
   const sendMessage = () => {
     if (!client || !client.connected) {
       alert("WebSocket에 연결되지 않았습니다.");
