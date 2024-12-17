@@ -414,6 +414,8 @@ const Product = () => {
   
     try {
       const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
+      console.log("Creating chat room with:", { buyerId, sellerId });
+  
       const response = await axios.post(
         `${apiUrl}/api/v1/chatRooms`,
         { user1Id: buyerId, user2Id: sellerId },
@@ -438,7 +440,7 @@ const Product = () => {
         alert(error.response?.data?.message || "채팅방 생성 중 오류가 발생했습니다.");
       }
     }
-  };  
+  };
   
   const confirmChat = () => {
     if (!product) return;
@@ -474,13 +476,13 @@ const Product = () => {
   
         const result = await response.json();
         setProduct(result.data);
+  
+        // 여기서 buyerId와 sellerId를 확인
+        console.log("buyerId:", userInfo?.id);
+        console.log("sellerId:", result.data.userId);
       } catch (error) {
         console.error("상품 데이터 로드 에러:", error);
-      } 
-      console.log("buyerId:", buyerId);
-      console.log("sellerId:", sellerId);  
-      console.log("userInfo:", userInfo);
-      console.log("buyerId:", userInfo?.id);
+      }
     };
   
     fetchProduct();
