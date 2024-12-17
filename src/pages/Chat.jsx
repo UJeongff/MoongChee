@@ -80,7 +80,7 @@ const ChatItem = styled.div`
 
 const Chat = () => {
   const navigate = useNavigate();
-  const { userInfo, isLoggedIn, setChatData } = useContext(UserContext);
+  const { userInfo, isLoggedIn } = useContext(UserContext);
   const [chatList, setChatList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -90,29 +90,29 @@ const Chat = () => {
       navigate("/login");
       return;
     }
-  
+
     const fetchChatList = async () => {
       try {
         const apiUrl =
           import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
-  
-        // URL 경로 수정
+
+        // API 경로 수정
         const response = await axios.get(
-          `${apiUrl}/api/v1/chats/chattingList/${userInfo.id}`,
+          `${apiUrl}/api/v1/chatRoom/chattingList/${userInfo.id}`,
           {
             headers: { Authorization: `Bearer ${userInfo.jwtToken.accessToken}` },
           }
         );
-  
-        console.log("채팅 목록 데이터:", response.data);
-  
-        if (Array.isArray(response.data.data)) {
-          setChatList(response.data.data); // 채팅 목록 설정
+
+        console.log("채팅 목록 응답:", response.data);
+
+        if (response.data.code === 200 && Array.isArray(response.data.data)) {
+          setChatList(response.data.data);
         } else {
-          setChatList([]); // 빈 배열 처리
+          setChatList([]); // 채팅 목록이 없으면 빈 배열 설정
         }
       } catch (err) {
-        console.error("에러 발생:", err.response || err.message);
+        console.error("채팅 목록 불러오기 실패:", err);
         setError(
           err.response?.data?.message || "채팅 목록을 불러오는 데 실패했습니다."
         );
@@ -120,17 +120,19 @@ const Chat = () => {
         setLoading(false);
       }
     };
-  
+
     fetchChatList();
   }, [userInfo, isLoggedIn, navigate]);
-  
+
   return (
     <Container>
       <Header>채팅 목록</Header>
       <ChatListContainer>
         {loading && <Loading>로딩 중...</Loading>}
         {error && <ErrorMessage>{error}</ErrorMessage>}
-        {!loading && !error && chatList.length === 0 && <Loading>채팅 내역이 없습니다.</Loading>}
+        {!loading && !error && chatList.length === 0 && (
+          <Loading>채팅 내역이 없습니다.</Loading>
+        )}
         {!loading &&
           !error &&
           chatList.map((chat) => {
@@ -153,7 +155,7 @@ const Chat = () => {
                 <div className="chat-info">
                   <div className="name">{chatPartner.name}</div>
                   <div className="last-message">
-                    {chat.latestMessageDto?.content || "메시지가 없습니다."}
+                    {chat.lastMessage?.content || "메시지가 없습니다."}
                   </div>
                 </div>
               </ChatItem>
