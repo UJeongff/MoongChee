@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { UserContext } from "../contexts/UserContext.jsx";
 import Footer from "../components/Footer";
 import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 
 // Styled Components 정의
 const Container = styled.div`
@@ -113,12 +114,13 @@ const ChatDetail = () => {
       navigate("/chat"); // roomId가 없으면 채팅 목록으로 이동
       return;
     }
-
+  
     setResolvedRoomId(roomId); // roomId가 있으면 상태에 저장
     console.log("roomId:", roomId);
-
+  
     const stompClient = new Client({
-      brokerURL: "wss://43.203.202.100.nip.io/ws", // WebSocket URL
+      // brokerURL 대신 webSocketFactory 사용
+      webSocketFactory: () => new SockJS("https://43.203.202.100.nip.io/ws"),
       connectHeaders: {
         Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
       },
@@ -126,10 +128,10 @@ const ChatDetail = () => {
       onConnect: (frame) => {
         console.log("WebSocket connected:", frame);
         setLoading(false);
-
+  
         const subscriptionPath = `/sub/chats/${roomId}`;
         console.log("Subscribing to:", subscriptionPath);
-
+  
         stompClient.subscribe(subscriptionPath, (message) => {
           console.log("Received message:", message.body);
           if (message.body) {
@@ -154,16 +156,16 @@ const ChatDetail = () => {
         console.warn("WebSocket disconnected. Attempting to reconnect...");
       },
     });
-
+  
     stompClient.activate();
     setClient(stompClient);
-
+  
     return () => {
       console.log("WebSocket connection deactivating...");
       stompClient.deactivate();
     };
   }, [roomId, userInfo, navigate]);
-
+  
   const sendMessage = () => {
     if (!client || !client.connected) {
       alert("WebSocket에 연결되지 않았습니다.");
