@@ -108,11 +108,11 @@ const ChatDetail = () => {
 
   useEffect(() => {
     if (!roomId) return;
-
+  
     console.log("roomId:", roomId);
     console.log("userInfo:", userInfo);
     console.log("Authorization Token:", userInfo?.jwtToken?.accessToken);
-
+  
     const stompClient = new Client({
       brokerURL: "wss://43.203.202.100.nip.io/ws", // WebSocket URL
       connectHeaders: {
@@ -140,7 +140,6 @@ const ChatDetail = () => {
           }
         });
       },
-    
       onStompError: (frame) => {
         console.error("WebSocket error:", frame);
         alert("WebSocket 연결에 실패했습니다.");
@@ -151,16 +150,16 @@ const ChatDetail = () => {
         console.warn("WebSocket disconnected. Attempting to reconnect...");
       },
     });
-    
+  
     stompClient.activate();
     setClient(stompClient);
-
+  
     return () => {
       console.log("WebSocket connection deactivating...");
       stompClient.deactivate();
     };
   }, [roomId, userInfo, navigate]);
-
+  
   const sendMessage = () => {
     if (!client || !client.connected) {
       alert("WebSocket에 연결되지 않았습니다.");
