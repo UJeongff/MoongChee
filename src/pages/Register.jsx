@@ -188,16 +188,16 @@ const Modal = styled.div`
   display: ${(props) => (props.$isOpen ? "flex" : "none")};
   justify-content: center;
   align-items: center;
-  max-width: 393px;
 `;
 
 const ModalContent = styled.div`
   background: white;
   padding: 20px;
   border-radius: 8px;
-  width: 80%;
-  max-width: 600px;
+  width: 100%;
+  max-width: 393px;  /* Header, Footer와 동일한 최대 너비 */
   position: relative;
+  box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
 `;
 
 const TermsSection = styled.section`
