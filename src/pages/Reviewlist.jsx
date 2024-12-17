@@ -1,12 +1,16 @@
 import React, { useContext, useEffect } from "react";
 import styled from "styled-components";
 import { UserContext } from "../contexts/UserContext.jsx";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import Header from "../components/Header";
 import Footer from "../components/Footer";
 
 const StyledHeader = styled.header`
   display: flex;
   align-items: center;
+  justify-content: center; /* 가로 방향 중앙 정렬 */
+  position: relative; /* 자식 요소를 상대적 위치로 배치 */
   width: 100%;
   height: 60px;
   background-color: white;
@@ -17,17 +21,18 @@ const StyledHeader = styled.header`
   z-index: 1000;
 
   .back-icon {
+    position: absolute; /* 왼쪽에 고정 */
+    left: 16px;
     font-size: 20px;
     color: #333;
     cursor: pointer;
-    margin-left: 16px;
   }
 
   h1 {
     font-size: 18px;
     font-weight: bold;
     color: #333;
-    margin: 0 auto;
+    margin: 0;
     text-align: center;
   }
 `;
@@ -59,21 +64,21 @@ const ReviewCard = styled.div`
   border-radius: 8px;
   margin-bottom: 16px;
   padding: 12px;
-  gap: 12px; /* 이미지와 내용 사이 간격 */
+  gap: 12px;
 
   .image {
     width: 80px;
     height: 80px;
     object-fit: cover;
     border-radius: 8px;
-    flex-shrink: 0; /* 이미지 크기 고정 */
+    flex-shrink: 0;
   }
 
   .review-content {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    flex: 1; /* 남은 공간을 모두 차지 */
+    flex: 1;
   }
 
   .rating {
@@ -86,7 +91,7 @@ const ReviewCard = styled.div`
     font-size: 14px;
     color: #666;
     margin-bottom: 4px;
-    flex: 1; /* 리뷰 내용이 남은 공간을 차지 */
+    flex: 1;
   }
 
   .date {
@@ -118,13 +123,12 @@ const convertRatingToStars = (rating) => {
 
 const ReviewList = () => {
   const { userInfo, reviews, setReviews } = useContext(UserContext);
+  const navigate = useNavigate(); // navigate 훅 사용
 
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const apiUrl =
-          import.meta.env.VITE_REACT_APP_API_URL ||
-          "http://43.203.202.100:8080";
+        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
         const token = userInfo?.jwtToken?.accessToken;
 
         const response = await axios.get(`${apiUrl}/api/v1/reviews/user`, {
@@ -147,7 +151,7 @@ const ReviewList = () => {
   return (
     <Container>
       <StyledHeader>
-        <div className="back-icon" onClick={() => navigate("/mypage")}>
+        <div className="back-icon" onClick={() => navigate(-1)}>
           ←
         </div>
         <h1>내 리뷰</h1>
@@ -162,13 +166,9 @@ const ReviewList = () => {
                 alt="상품 이미지"
               />
               <div className="review-content">
-                <div className="rating">
-                  {convertRatingToStars(review.reviewScore)}
-                </div>
+                <div className="rating">{convertRatingToStars(review.reviewScore)}</div>
                 <div className="content">{review.reviewContent}</div>
-                <div className="date">
-                  {new Date(review.createdAt).toLocaleDateString()}
-                </div>
+                <div className="date">{new Date(review.createdAt).toLocaleDateString()}</div>
               </div>
             </ReviewCard>
           ))
