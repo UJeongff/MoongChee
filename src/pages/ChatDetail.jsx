@@ -136,7 +136,7 @@ const Loading = styled.div`
 `;
 
 const ChatDetail = () => {
-  const { roomId, productId } = useParams();
+  const { roomId, productId } = useParams();  // roomId와 productId를 받아옵니다.
   const { userInfo } = useContext(UserContext);
   const navigate = useNavigate();
   const [client, setClient] = useState(null);
