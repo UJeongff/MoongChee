@@ -2,8 +2,35 @@ import React, { useContext, useEffect } from "react";
 import styled from "styled-components";
 import { UserContext } from "../contexts/UserContext.jsx";
 import axios from "axios";
-import Header from "../components/Header";
 import Footer from "../components/Footer";
+
+const StyledHeader = styled.header`
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 60px;
+  background-color: white;
+  border-bottom: 1px solid #ddd;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  .back-icon {
+    font-size: 20px;
+    color: #333;
+    cursor: pointer;
+    margin-left: 16px;
+  }
+
+  h1 {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin: 0 auto;
+    text-align: center;
+  }
+`;
 
 const Container = styled.div`
   display: flex;
@@ -75,8 +102,6 @@ const NoReviews = styled.div`
   color: #888;
 `;
 
-
-
 // 별점 문자열을 숫자로 변환하는 함수
 const convertRatingToStars = (rating) => {
   const ratingMap = {
@@ -97,7 +122,9 @@ const ReviewList = () => {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+        const apiUrl =
+          import.meta.env.VITE_REACT_APP_API_URL ||
+          "http://43.203.202.100:8080";
         const token = userInfo?.jwtToken?.accessToken;
 
         const response = await axios.get(`${apiUrl}/api/v1/reviews/user`, {
@@ -119,7 +146,12 @@ const ReviewList = () => {
 
   return (
     <Container>
-      <Header title="내 리뷰" />
+      <StyledHeader>
+        <div className="back-icon" onClick={() => navigate("/mypage")}>
+          ←
+        </div>
+        <h1>내 리뷰</h1>
+      </StyledHeader>
       <Content>
         {reviews.length > 0 ? (
           reviews.map((review, index) => (
@@ -130,9 +162,13 @@ const ReviewList = () => {
                 alt="상품 이미지"
               />
               <div className="review-content">
-                <div className="rating">{convertRatingToStars(review.reviewScore)}</div>
+                <div className="rating">
+                  {convertRatingToStars(review.reviewScore)}
+                </div>
                 <div className="content">{review.reviewContent}</div>
-                <div className="date">{new Date(review.createdAt).toLocaleDateString()}</div>
+                <div className="date">
+                  {new Date(review.createdAt).toLocaleDateString()}
+                </div>
               </div>
             </ReviewCard>
           ))

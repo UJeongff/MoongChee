@@ -362,18 +362,25 @@ const Register = () => {
 
       // FormData를 사용하여 이미지 파일과 데이터를 함께 전송
       const formData = new FormData();
+      const requestDTO = {
+        tradeType: input.type, // "SALE" or "RENTAL"
+        name: input.productName,
+        productContent: input.content,
+        keyword: input.keyword, // "BOOK", "NECESSITY", etc.
+        date: input.date, // "YYYY-MM-DDTHH:MM"
+        price: parseFloat(input.price), // 가격을 숫자로 변환
+      };
+      formData.append("requestDTO", JSON.stringify(requestDTO));
 
-      formData.append("tradeType", input.type); // SALE or RENTAL
-      formData.append("name", input.productName);
-      formData.append("productContent", input.content);
-      formData.append("keyword", input.keyword); // BOOK, NECESSITY, etc.
-      formData.append("date", input.date); // LocalDateTime 형태
-      formData.append("price", input.price);
-
-      // 이미지 파일 추가
-      selectedFiles.forEach((file, index) => {
+      // productImages 배열에 파일 추가
+      selectedFiles.forEach((file) => {
         formData.append("productImages", file);
       });
+
+      console.log("FormData에 추가된 내용:");
+      for (let [key, value] of formData.entries()) {
+        console.log(`${key}:`, value);
+      }
 
       const response = await axios.post(`${apiUrl}/api/v1/posts`, formData, {
         headers: {

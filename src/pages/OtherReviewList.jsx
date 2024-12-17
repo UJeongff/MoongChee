@@ -27,6 +27,7 @@ const StyledHeader = styled.header`
   h1 {
     font-size: 18px;
     font-weight: bold;
+    text-align: center;
     color: #333;
     margin: 0 auto;
   }

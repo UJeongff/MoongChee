@@ -30,6 +30,7 @@ const StyledHeader = styled.header`
     font-weight: bold;
     color: #333;
     margin: 0 auto;
+    text-align: center;
   }
 `;
 
