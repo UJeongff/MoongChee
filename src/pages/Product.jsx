@@ -607,21 +607,27 @@ const Product = () => {
         <div className="title">상품 상세 정보</div>
       </Header>
       <ProductImageContainer>
-        {product.productImageUrls && product.productImageUrls.length > 0 && (
+        {product.productImageUrls && product.productImageUrls.length > 1 ? (
           <>
             <ArrowButton className="left" onClick={prevImage}>
               &#8592;
             </ArrowButton>
             <ProductImage
-              src={product.productImageUrls[currentImageIndex] || "/default-image.png"}
+              src={product.productImageUrls[currentImageIndex]}
               alt={`상품 이미지 ${currentImageIndex + 1}`}
             />
             <ArrowButton className="right" onClick={nextImage}>
               &#8594;
             </ArrowButton>
           </>
+        ) : (
+          <ProductImage
+            src={product.productImageUrls?.[0] || "/default-image.png"}
+            alt="상품 이미지"
+          />
         )}
       </ProductImageContainer>
+
       <ProductDetails>
         <ProductImage
           src={product.productImageUrls?.[0] || "/default-image.png"}
