@@ -107,7 +107,7 @@ const ChatDetail = () => {
   const [loading, setLoading] = useState(true);
   const [reconnecting, setReconnecting] = useState(false);
   const [page, setPage] = useState(0); // 페이지 번호 상태
-  const [size] = useState(20); // 페이지 당 메시지 수
+  const [size] = useState(40); // 페이지 당 메시지 수
 
   // 채팅 메시지 로딩
   const fetchMessages = async () => {
