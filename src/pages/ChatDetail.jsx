@@ -107,41 +107,40 @@ const ChatDetail = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
+  const [reconnecting, setReconnecting] = useState(false); // 재연결 상태 추적
+  const [page, setPage] = useState(0); // 페이지 번호 상태
+  const [size] = useState(20); // 페이지 당 메시지 수 (이 예시에서는 20개)
 
+  // WebSocket 연결 및 메시지 처리
   useEffect(() => {
     if (!roomId) {
-      console.log("roomId가 없습니다. 채팅 목록으로 이동합니다.");
+      console.log("roomId is missing, redirecting to chat list...");
       navigate("/chat");
       return;
     }
 
+    // 서버에서 채팅 메시지 불러오기
     const fetchMessages = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
-        const response = await axios.get(`${apiUrl}/api/v1/chats/chatting/${roomId}/0/50`, {
-          headers: {
-            Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
-          },
-        });
-
-        if (response.status === 200) {
-          // API 응답이 최신 메시지 순서로 오므로, 이를 역순으로 변경하여 오래된 메시지가 먼저 오도록 함
-          const fetchedMessages = response.data.data.reverse().map(msg => ({
-            sender: msg.senderId === userInfo.id ? "me" : "other",
-            text: msg.content,
-            createdAt: msg.createdAt,
-          }));
-          setMessages(fetchedMessages);
-        } else {
-          console.error("채팅 내역을 불러오는 데 실패했습니다.");
+        const response = await axios.get(
+          `${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/chats/chatting/${roomId}/${page}/${size}`,
+          {
+            headers: {
+              Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
+            },
+          }
+        );
+        if (response.data) {
+          setMessages(response.data.data);
         }
       } catch (error) {
-        console.error("채팅 내역 로드 에러:", error);
+        console.error("Failed to fetch messages:", error);
       }
     };
 
     fetchMessages();
 
+    // WebSocket 연결 설정
     const stompClient = new Client({
       webSocketFactory: () => new SockJS("https://43.203.202.100.nip.io/ws"),
       connectHeaders: {
@@ -149,14 +148,14 @@ const ChatDetail = () => {
       },
       reconnectDelay: 5000,
       onConnect: (frame) => {
-        console.log("WebSocket 연결됨:", frame);
+        console.log("WebSocket connected:", frame);
         setLoading(false);
 
         const subscriptionPath = `/sub/chats/${roomId}`;
-        console.log("구독 경로:", subscriptionPath);
+        console.log("Subscribing to:", subscriptionPath);
 
         stompClient.subscribe(subscriptionPath, (message) => {
-          console.log("수신된 메시지:", message.body);
+          console.log("Received message:", message.body);
           if (message.body) {
             const receivedMessage = JSON.parse(message.body);
             setMessages((prev) => [
@@ -164,20 +163,19 @@ const ChatDetail = () => {
               {
                 sender: receivedMessage.senderId === userInfo.id ? "me" : "other",
                 text: receivedMessage.content,
-                createdAt: receivedMessage.createdAt,
               },
             ]);
           }
         });
       },
       onStompError: (frame) => {
-        console.error("WebSocket 오류:", frame);
-        alert("WebSocket 연결에 실패했습니다.");
+        console.error("WebSocket error:", frame);
         setLoading(false);
-        navigate("/chat");
-      },
-      onDisconnect: () => {
-        console.warn("WebSocket 연결 해제됨. 재연결을 시도합니다...");
+        setReconnecting(true);
+        alert("WebSocket 연결에 실패했습니다.");
+        setTimeout(() => {
+          stompClient.activate();
+        }, 5000);
       },
     });
 
@@ -185,10 +183,10 @@ const ChatDetail = () => {
     setClient(stompClient);
 
     return () => {
-      console.log("WebSocket 연결 종료...");
+      console.log("WebSocket connection deactivating...");
       stompClient.deactivate();
     };
-  }, [roomId, userInfo, navigate]);
+  }, [roomId, userInfo, navigate, page, size]);
 
   const sendMessage = () => {
     if (!client || !client.connected) {
@@ -199,20 +197,20 @@ const ChatDetail = () => {
     if (input.trim()) {
       try {
         const messagePayload = {
-          roomId,
-          senderId: userInfo.id,
-          senderName: userInfo.name || "Anonymous",
-          content: input.trim(),
+          roomId,  // 채팅방 ID
+          senderId: userInfo.id,  // 사용자 ID
+          senderName: userInfo.name || "Anonymous",  // 사용자 이름
+          content: input.trim(),  // 메시지 내용
         };
-        console.log("보내는 메시지:", messagePayload);
+        console.log("Sending message:", messagePayload);
 
         client.publish({
           destination: "/pub/chats/messages",
           body: JSON.stringify(messagePayload),
         });
-        setInput("");
+        setInput(""); // 메시지 전송 후 입력창 초기화
       } catch (error) {
-        console.error("메시지 전송 오류:", error);
+        console.error("메시지 전송 에러:", error);
         alert("메시지 전송에 실패했습니다.");
       }
     } else {
@@ -246,6 +244,7 @@ const ChatDetail = () => {
           </MessageInputContainer>
         </>
       )}
+      {reconnecting && <Loading>Reconnecting...</Loading>}
       <Footer />
     </Container>
   );
