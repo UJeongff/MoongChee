@@ -118,7 +118,7 @@ const ChatDetail = () => {
     console.log("roomId:", roomId);
 
     const stompClient = new Client({
-      brokerURL: "https://43.203.202.100.nip.io/ws", // WebSocket URL
+      brokerURL: "wss://43.203.202.100.nip.io/ws", // WebSocket URL
       connectHeaders: {
         Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
       },
@@ -127,7 +127,7 @@ const ChatDetail = () => {
         console.log("WebSocket connected:", frame);
         setLoading(false);
 
-        const subscriptionPath = `/sub/chats/${roomId}`;
+        const subscriptionPath = `/sub/${roomId}`;
         console.log("Subscribing to:", subscriptionPath);
 
         stompClient.subscribe(subscriptionPath, (message) => {
@@ -181,7 +181,7 @@ const ChatDetail = () => {
         console.log("Sending message:", messagePayload);
 
         client.publish({
-          destination: "/pub/chats/messages",
+          destination: "/pub/messages",
           body: JSON.stringify(messagePayload),
         });
         setInput("");
