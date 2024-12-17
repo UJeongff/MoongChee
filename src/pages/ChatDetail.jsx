@@ -1,3 +1,4 @@
+import axios from "axios";
 import React, { useContext, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -5,7 +6,6 @@ import { UserContext } from "../contexts/UserContext.jsx";
 import Footer from "../components/Footer";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
-import axios from "axios"; // axios 임포트 추가
 
 // Styled Components 정의
 const Container = styled.div`
@@ -111,6 +111,25 @@ const ChatDetail = () => {
   const [page, setPage] = useState(0); // 페이지 번호 상태
   const [size] = useState(20); // 페이지 당 메시지 수 (이 예시에서는 20개)
 
+  // 채팅 메시지 로딩
+  const fetchMessages = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/chats/chatting/${roomId}/${page}/${size}`,
+        {
+          headers: {
+            Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
+          },
+        }
+      );
+      if (response.data) {
+        setMessages(response.data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch messages:", error);
+    }
+  };
+
   // WebSocket 연결 및 메시지 처리
   useEffect(() => {
     if (!roomId) {
@@ -119,25 +138,7 @@ const ChatDetail = () => {
       return;
     }
 
-    // 서버에서 채팅 메시지 불러오기
-    const fetchMessages = async () => {
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/chats/chatting/${roomId}/${page}/${size}`,
-          {
-            headers: {
-              Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
-            },
-          }
-        );
-        if (response.data) {
-          setMessages(response.data.data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch messages:", error);
-      }
-    };
-
+    // 메시지 초기 로딩
     fetchMessages();
 
     // WebSocket 연결 설정
