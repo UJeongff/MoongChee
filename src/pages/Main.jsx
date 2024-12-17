@@ -148,8 +148,7 @@ const Main = () => {
       } catch (error) {
         console.error("상품 데이터 페칭 에러:", error);
       }
-    };
-    
+    };    
     
 
     getProducts();
@@ -178,7 +177,7 @@ const Main = () => {
               onClick={() => navigate(`/product/${product.postId}`)}
             >
               <ItemImage
-                src={product.productImageUrls || "/default-image.png"}
+                src={product.productImageUrls?.[0] || "/default-image.png"}
                 alt={product.productName || "상품 이미지"}
               />
 
