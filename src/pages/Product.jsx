@@ -436,10 +436,18 @@ const Product = () => {
         alert("채팅방 생성에 실패했습니다.");
       }
     } catch (error) {
-      console.error("채팅방 생성 에러:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "채팅방 생성 중 오류가 발생했습니다.");
+      if (error.response?.status === 400 && error.response.data?.data?.roomId) {
+        const existingRoomId = error.response.data.data.roomId;
+        navigate(`/chat/${existingRoomId}`);
+      } else {
+        console.error("채팅방 생성 에러:", error.response?.data || error.message);
+        alert(error.response?.data?.message || "채팅방 생성 중 오류가 발생했습니다.");
+      }
     }
-  };
+    console.log("buyerId:", buyerId);
+    console.log("sellerId:", sellerId);    
+
+  };  
   
   const confirmChat = () => {
     if (!product) return;
