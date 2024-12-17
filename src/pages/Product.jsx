@@ -478,7 +478,9 @@ const Product = () => {
         console.error("상품 데이터 로드 에러:", error);
       } 
       console.log("buyerId:", buyerId);
-      console.log("sellerId:", sellerId);      
+      console.log("sellerId:", sellerId);  
+      console.log("userInfo:", userInfo);
+      console.log("buyerId:", userInfo?.id);
     };
   
     fetchProduct();
