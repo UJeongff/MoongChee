@@ -47,9 +47,11 @@ const Header = styled.header`
 const ProductImageContainer = styled.div`
   position: relative;
   width: 100%;
-  max-width: 100%;
+  height: 200px;
+  overflow: hidden;
   border-radius: 8px;
   margin-bottom: 16px;
+  cursor: pointer;
 `;
 
 const ProductImage = styled.img`
@@ -606,17 +608,17 @@ const Product = () => {
         </div>
         <div className="title">상품 상세 정보</div>
       </Header>
-      <ProductImageContainer>
+      <ProductImageContainer onClick={() => setIsModalOpen(true)}>
         {product.productImageUrls && product.productImageUrls.length > 1 ? (
           <>
-            <ArrowButton className="left" onClick={prevImage}>
+            <ArrowButton className="left" onClick={(e) => { e.stopPropagation(); prevImage(); }}>
               &#8592;
             </ArrowButton>
             <ProductImage
               src={product.productImageUrls[currentImageIndex]}
               alt={`상품 이미지 ${currentImageIndex + 1}`}
             />
-            <ArrowButton className="right" onClick={nextImage}>
+            <ArrowButton className="right" onClick={(e) => { e.stopPropagation(); nextImage(); }}>
               &#8594;
             </ArrowButton>
           </>
@@ -627,11 +629,20 @@ const Product = () => {
           />
         )}
       </ProductImageContainer>
-<ProductDetails>
-        <ProductImage
-          src={product.productImageUrls?.[0] || "/default-image.png"}
-          alt={product.name}
-        />
+
+      {isModalOpen && (
+        <Modal $isOpen={isModalOpen} onClick={() => setIsModalOpen(false)}>
+          <ModalContent>
+            <img
+              src={product.productImageUrls[currentImageIndex]}
+              alt={`상품 이미지 ${currentImageIndex + 1}`}
+              style={{ width: '100%', maxHeight: '80vh', objectFit: 'contain' }}
+            />
+          </ModalContent>
+        </Modal>
+      )}
+
+        <ProductDetails>
         <ProductHeader $tradeType={product.tradeType}>
           <div className="name">{product.name}</div>
           <div className="type">{getTradeTypeLabel(product.tradeType)}</div>
