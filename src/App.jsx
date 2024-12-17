@@ -37,7 +37,7 @@ function App() {
   return (
     <UserProvider>
       <Routes>
-        <Route path="/" element={<Main />} />
+        <Route path="/" element={<ProtectedRoute><Main /></ProtectedRoute>} />
         <Route path="/search" element={<Search />} />
         <Route path="/searchresult" element={<SearchResult />} />
         <Route path="/detail" element={<Detail />} />
