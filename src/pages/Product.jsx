@@ -258,15 +258,17 @@ const Modal = styled.div`
   display: ${(props) => (props.$isOpen ? "flex" : "none")};
   justify-content: center;
   align-items: center;
+  z-index: 1000;
 `;
 
 const ModalContent = styled.div`
   background: white;
   padding: 20px;
   border-radius: 8px;
-  width: 80%;
-  max-width: 600px;
-  position: relative;
+  width: 100%;
+  max-width: 393px; /* 페이지와 동일한 최대 너비 */
+  box-sizing: border-box;
+  margin: 0 auto; /* 중앙 정렬 */
 `;
 
 const TermsSection = styled.section`
