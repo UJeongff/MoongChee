@@ -47,16 +47,16 @@ const Header = styled.header`
 const ProductImageContainer = styled.div`
   position: relative;
   width: 100%;
-  height: 200px;
-  overflow: hidden;
+  max-width: 100%;
   border-radius: 8px;
   margin-bottom: 16px;
 `;
 
 const ProductImage = styled.img`
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-height: 400px;
+  object-fit: contain; /* 이미지가 잘리지 않고 전체가 보이도록 설정 */
+  border-radius: 8px;
 `;
 
 const ArrowButton = styled.button`
@@ -627,8 +627,7 @@ const Product = () => {
           />
         )}
       </ProductImageContainer>
-
-      <ProductDetails>
+<ProductDetails>
         <ProductImage
           src={product.productImageUrls?.[0] || "/default-image.png"}
           alt={product.name}
