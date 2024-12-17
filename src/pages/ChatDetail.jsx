@@ -112,7 +112,7 @@ const ChatDetail = () => {
     console.log("roomId:", roomId);
 
     const stompClient = new Client({
-      brokerURL: "wss://43.203.202.100.nip.io/ws",
+      brokerURL: "wss://43.203.202.100.nip.io",
       connectHeaders: {
         Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
       },
