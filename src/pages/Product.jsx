@@ -266,7 +266,7 @@ const Product = () => {
   } = useContext(UserContext);
 
   const [product, setProduct] = useState(null);
-  const [reviews, setReviews] = useState([]); // 이 부분 추가
+  const [reviews, setReviews] = useState([]); 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [checklist, setChecklist] = useState({
     terms1: false,
@@ -477,17 +477,11 @@ const Product = () => {
         setProduct(result.data);
       } catch (error) {
         console.error("상품 데이터 로드 에러:", error);
-      } finally {
-        setLoading(false);
-      }
+      } 
     };
   
     fetchProduct();
   }, [id, userInfo]);
-
-  if (loading) {
-    return <div>로딩 중...</div>;
-  }
   
   const getTradeTypeLabel = (tradeType) => {
     return tradeType === "RENTAL" ? "대여" : "판매";
