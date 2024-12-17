@@ -488,12 +488,12 @@ const Product = () => {
   
     try {
       const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
+  
       console.log("Creating chat room with:", { buyerId, sellerId });
   
       const response = await axios.post(
         `${apiUrl}/api/v1/chatRooms`,
-        { user1Id: buyerId, 
-          user2Id: sellerId },
+        { user1Id: buyerId, user2Id: sellerId },
         {
           headers: {
             Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
@@ -509,13 +509,13 @@ const Product = () => {
       if (error.response?.status === 400 && error.response.data?.data?.roomId) {
         // 중복된 채팅방이 있을 경우, 해당 채팅방으로 이동
         const existingRoomId = error.response.data.data.roomId;
+        console.log("Existing chat room found:", existingRoomId);
         navigate(`/chat/${existingRoomId}`);
       } else {
         console.error("채팅방 생성 에러:", error.response?.data || error.message);
         alert(error.response?.data?.message || "채팅방 생성 중 오류가 발생했습니다.");
       }
     }
-    console.log("Request Payload:", { user1Id: buyerId, user2Id: sellerId });
   };
   
   const confirmChat = () => {
