@@ -122,11 +122,12 @@ const ChatDetail = () => {
         }
       );
       console.log("Response data:", response.data); // 서버 응답 데이터 로그 확인
-      if (response.data && response.data.data) {
+      if (response.data && response.data.data.length > 0) {
         console.log("Messages fetched:", response.data.data); // 로그 추가
         setMessages(response.data.data);
       } else {
         console.log("No messages found.");
+        setMessages([]); // 메시지가 없으면 빈 배열로 설정
       }
     } catch (error) {
       console.error("Failed to fetch messages:", error);
@@ -230,11 +231,15 @@ const ChatDetail = () => {
       ) : (
         <>
           <ChatContent>
-            {messages.map((msg, index) => (
-              <MessageBubble key={index} sender={msg.sender}>
-                {msg.text}
-              </MessageBubble>
-            ))}
+            {messages.length === 0 ? (
+              <div>메시지가 없습니다.</div>
+            ) : (
+              messages.map((msg, index) => (
+                <MessageBubble key={index} sender={msg.sender}>
+                  {msg.text}
+                </MessageBubble>
+              ))
+            )}
           </ChatContent>
           <MessageInputContainer>
             <input
