@@ -6,6 +6,7 @@ import Footer from "../components/Footer";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 // Styled Components 정의
 const Container = styled.div`
@@ -30,6 +31,41 @@ const Header = styled.header`
   font-weight: bold;
   font-size: 20px;
   border-bottom: 1px solid #ddd;
+`;
+
+const ProductInfo = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 16px;
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #ddd;
+`;
+
+const ProductImage = styled.img`
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  margin-right: 16px;
+`;
+
+const ProductName = styled.h3`
+  font-size: 16px;
+  margin-right: 20px;
+`;
+
+const ReviewButton = styled.button`
+  padding: 8px 16px;
+  font-size: 14px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #0056b3;
+  }
 `;
 
 const ChatContent = styled.div`
@@ -100,40 +136,38 @@ const Loading = styled.div`
 `;
 
 const ChatDetail = () => {
-  const { roomId } = useParams();
+  const { roomId, productId } = useParams();
   const { userInfo } = useContext(UserContext);
   const navigate = useNavigate();
   const [client, setClient] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
+  const [product, setProduct] = useState(null);
 
-  // 채팅방에 들어갈 때 이전 메시지 불러오기
   useEffect(() => {
     if (!roomId) {
-      navigate("/chat"); // roomId가 없으면 채팅 목록으로 이동
+      navigate("/chat");
       return;
     }
 
-    const fetchMessages = async () => {
+    const fetchProductInfo = async () => {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/chats/${roomId}/messages`,
+          `${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/products/${productId}`,
           {
             headers: {
               Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
             },
           }
         );
-        if (response.status === 200) {
-          setMessages(response.data.messages); // 이전 메시지 설정
-        }
+        setProduct(response.data);
       } catch (error) {
-        console.error("Failed to load messages:", error);
+        console.error("Failed to fetch product:", error);
       }
     };
 
-    fetchMessages();
+    fetchProductInfo();
 
     const stompClient = new Client({
       webSocketFactory: () => new SockJS("https://43.203.202.100.nip.io/ws"),
@@ -142,7 +176,6 @@ const ChatDetail = () => {
       },
       reconnectDelay: 5000,
       onConnect: (frame) => {
-        console.log("WebSocket connected:", frame);
         setLoading(false);
 
         stompClient.subscribe(`/sub/chats/${roomId}`, (message) => {
@@ -160,7 +193,6 @@ const ChatDetail = () => {
       },
       onStompError: (frame) => {
         console.error("WebSocket error:", frame);
-        alert("WebSocket 연결에 실패했습니다.");
         setLoading(false);
         navigate("/chat");
       },
@@ -172,7 +204,7 @@ const ChatDetail = () => {
     return () => {
       stompClient.deactivate();
     };
-  }, [roomId, userInfo, navigate]);
+  }, [roomId, userInfo, navigate, productId]);
 
   const sendMessage = () => {
     if (!client || !client.connected) {
@@ -181,23 +213,18 @@ const ChatDetail = () => {
     }
 
     if (input.trim()) {
-      try {
-        const messagePayload = {
-          roomId,
-          senderId: userInfo.id,
-          senderName: userInfo.name || "Anonymous",
-          content: input.trim(),
-        };
+      const messagePayload = {
+        roomId,
+        senderId: userInfo.id,
+        senderName: userInfo.name || "Anonymous",
+        content: input.trim(),
+      };
 
-        client.publish({
-          destination: "/pub/chats/messages",
-          body: JSON.stringify(messagePayload),
-        });
-        setInput(""); // 메시지 전송 후 입력창 초기화
-      } catch (error) {
-        console.error("메시지 전송 에러:", error);
-        alert("메시지 전송에 실패했습니다.");
-      }
+      client.publish({
+        destination: "/pub/chats/messages",
+        body: JSON.stringify(messagePayload),
+      });
+      setInput(""); // 메시지 전송 후 입력창 초기화
     } else {
       alert("메시지를 입력하세요.");
     }
@@ -206,6 +233,18 @@ const ChatDetail = () => {
   return (
     <Container>
       <Header>채팅방</Header>
+
+      {/* Product Information Section */}
+      {product && (
+        <ProductInfo>
+          <ProductImage src={product.imageUrl} alt={product.name} />
+          <ProductName>{product.name}</ProductName>
+          <Link to={`/review/${product.id}`}>
+            <ReviewButton>리뷰</ReviewButton>
+          </Link>
+        </ProductInfo>
+      )}
+
       {loading ? (
         <Loading>Loading...</Loading>
       ) : (
@@ -229,6 +268,7 @@ const ChatDetail = () => {
           </MessageInputContainer>
         </>
       )}
+
       <Footer />
     </Container>
   );
