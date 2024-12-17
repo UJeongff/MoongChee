@@ -129,6 +129,15 @@ const MessageBubble = styled.div`
   box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
 `;
 
+const Loading = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  font-size: 18px;
+  color: #007bff;
+`;
+
 const ChatDetail = () => {
   const { id: roomId } = useParams();
   const { userInfo } = useContext(UserContext);
@@ -140,13 +149,14 @@ const ChatDetail = () => {
 
   useEffect(() => {
     if (!roomId) return;
-
-    const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+  
+    const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
     const stompClient = new Client({
       webSocketFactory: () => new SockJS(`${apiUrl}/ws`),
       connectHeaders: {
-        Authorization: `Bearer ${userInfo.jwtToken.accessToken}`,
+        Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
       },
+      reconnectDelay: 5000, // 5초 후 재연결 시도
       onConnect: () => {
         console.log("WebSocket connected");
         setLoading(false);
@@ -168,31 +178,41 @@ const ChatDetail = () => {
         alert("WebSocket 연결에 실패했습니다.");
         navigate("/chat");
       },
+      onDisconnect: () => {
+        console.warn("WebSocket disconnected. Attempting to reconnect...");
+      },
     });
-
+  
     stompClient.activate();
     setClient(stompClient);
-
+  
     return () => {
       stompClient.deactivate();
     };
   }, [roomId, userInfo, navigate]);
-
+  
   const sendMessage = () => {
-    if (client && input.trim()) {
+    if (!client || !client.connected) {
+      alert("WebSocket에 연결되지 않았습니다.");
+      return;
+    }
+  
+    if (input.trim()) {
       try {
         client.publish({
           destination: "/ws/pub/chats/messages",
-          body: JSON.stringify({ roomId, senderId: userInfo.id, content: input }),
+          body: JSON.stringify({ roomId, senderId: userInfo.id, content: input.trim() }),
         });
         setInput("");
       } catch (error) {
         console.error("메시지 전송 에러:", error);
         alert("메시지 전송에 실패했습니다.");
       }
+    } else {
+      alert("메시지를 입력하세요.");
     }
   };
-
+  
   return (
     <Container>
       <Header>채팅방</Header>
@@ -213,9 +233,11 @@ const ChatDetail = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="메시지를 입력하세요"
+              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             />
             <button onClick={sendMessage}>전송</button>
           </MessageInputContainer>
+
         </>
       )}
       <Footer />

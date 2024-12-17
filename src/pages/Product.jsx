@@ -299,23 +299,16 @@ const Product = () => {
 
   useEffect(() => {
     const fetchUserReviews = async () => {
-      if (!product?.userId) return;
-
+      if (!product?.userId || !userInfo?.jwtToken?.accessToken) return;
+  
       try {
-        const apiUrl =
-          import.meta.env.VITE_REACT_APP_API_URL ||
-          "http://43.203.202.100:8080";
-        const token = userInfo?.jwtToken?.accessToken;
-
-        const response = await axios.get(
-          `${apiUrl}/api/v1/reviews/user/${product.userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
+        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+        const response = await axios.get(`${apiUrl}/api/v1/reviews/user/${product.userId}`, {
+          headers: {
+            Authorization: `Bearer ${userInfo.jwtToken.accessToken}`,
+          },
+        });
+  
         if (response.status === 200) {
           setReviews(response.data.data.reviews);
         }
@@ -323,10 +316,10 @@ const Product = () => {
         console.error("리뷰 데이터 로드 에러:", error);
       }
     };
-
+  
     fetchUserReviews();
   }, [product, userInfo]);
-
+  
   const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
@@ -415,27 +408,27 @@ const Product = () => {
       alert("상품 정보를 불러오지 못했습니다.");
       return;
     }
-
+  
     try {
-      const apiUrl =
-        import.meta.env.VITE_REACT_APP_API_URL ||
-        "https://43.203.202.100.nip.io";
-      const buyerId = userInfo.id;
-      const sellerId = product.userId;
-
-      console.log(`POST 요청 URL: ${apiUrl}/api/v1/chatRooms`);
-      console.log(`요청 본문:`, { user1Id: buyerId, user2Id: sellerId });
-
+      const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
+      const buyerId = userInfo?.id;
+      const sellerId = product?.userId;
+  
+      if (!buyerId || !sellerId) {
+        alert("유효한 사용자 정보가 없습니다.");
+        return;
+      }
+  
       const response = await axios.post(
         `${apiUrl}/api/v1/chatRooms`,
-        { user1Id: buyerId, user2Id: sellerId }, // 올바른 request body
+        { user1Id: buyerId, user2Id: sellerId },
         {
           headers: {
             Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
           },
         }
       );
-
+  
       if (response.status === 200 || response.status === 201) {
         const roomId = response.data.data.roomId;
         navigate(`/chat/${roomId}`);
@@ -444,12 +437,10 @@ const Product = () => {
       }
     } catch (error) {
       console.error("채팅방 생성 에러:", error.response?.data || error.message);
-      alert(
-        error.response?.data?.message || "채팅방 생성 중 오류가 발생했습니다."
-      );
+      alert(error.response?.data?.message || "채팅방 생성 중 오류가 발생했습니다.");
     }
   };
-
+  
   const confirmChat = () => {
     if (!product) return;
     const chatId = product.id;
@@ -468,32 +459,36 @@ const Product = () => {
 
   useEffect(() => {
     const fetchProduct = async () => {
+      if (!userInfo?.jwtToken?.accessToken) return;
+  
       try {
-        const apiUrl =
-          import.meta.env.VITE_REACT_APP_API_URL ||
-          "http://43.203.202.100:8080/api/v1";
-
+        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
         const response = await fetch(`${apiUrl}/api/v1/posts/${id}`, {
           headers: {
-            Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
+            Authorization: `Bearer ${userInfo.jwtToken.accessToken}`,
           },
         });
-
+  
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-
+  
         const result = await response.json();
-        console.log("Fetched product:", result.data); // product 데이터 확인
         setProduct(result.data);
       } catch (error) {
         console.error("상품 데이터 로드 에러:", error);
+      } finally {
+        setLoading(false);
       }
     };
-
+  
     fetchProduct();
   }, [id, userInfo]);
 
+  if (loading) {
+    return <div>로딩 중...</div>;
+  }
+  
   const getTradeTypeLabel = (tradeType) => {
     return tradeType === "RENTAL" ? "대여" : "판매";
   };
