@@ -118,7 +118,6 @@ const ChatDetail = () => {
       connectHeaders: {
         Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
       },
-      reconnectDelay: 5000, // 5초 후 재연결 시도
       onConnect: (frame) => {
         console.log("WebSocket connected:", frame);
         setLoading(false);
