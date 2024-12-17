@@ -71,7 +71,7 @@ const FullScreenModal = styled.div`
   width: 100%;
   max-width: 393px; /* 헤더 및 푸터와 같은 최대 너비 */
   height: 100%;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
