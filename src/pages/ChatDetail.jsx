@@ -1,5 +1,3 @@
-// src/pages/ChatDetail.jsx
-
 import React, { useContext, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -149,10 +147,9 @@ const ChatDetail = () => {
 
   useEffect(() => {
     if (!roomId) return;
-  
-    const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
+
     const stompClient = new Client({
-      webSocketFactory: () => new SockJS(`${apiUrl}/ws`),
+      webSocketFactory: () => new SockJS(`wss://43.203.202.100.nip.io/ws`),
       connectHeaders: {
         Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
       },
@@ -164,7 +161,6 @@ const ChatDetail = () => {
         stompClient.subscribe(`/ws/sub/chats/messages/${roomId}`, (message) => {
           if (message.body) {
             const receivedMessage = JSON.parse(message.body);
-            console.log("Received message:", receivedMessage);
             setMessages((prev) => [
               ...prev,
               {
@@ -184,29 +180,30 @@ const ChatDetail = () => {
         console.warn("WebSocket disconnected. Attempting to reconnect...");
       },
     });
-  
+
     stompClient.activate();
     setClient(stompClient);
-  
+
     return () => {
       stompClient.deactivate();
     };
   }, [roomId, userInfo, navigate]);
-  
+
   const sendMessage = () => {
     if (!client || !client.connected) {
       alert("WebSocket에 연결되지 않았습니다.");
       return;
     }
-  
+
     if (input.trim()) {
       try {
         client.publish({
           destination: "/ws/pub/chats/messages",
-          body: JSON.stringify({ roomId, 
-            senderId: userInfo.id, 
+          body: JSON.stringify({
+            roomId,
+            senderId: userInfo.id,
             senderName: userInfo.name || "Anonymous",
-            content: input.trim() 
+            content: input.trim(),
           }),
         });
         setInput("");
@@ -218,7 +215,7 @@ const ChatDetail = () => {
       alert("메시지를 입력하세요.");
     }
   };
-  
+
   return (
     <Container>
       <Header>채팅방</Header>
@@ -243,7 +240,6 @@ const ChatDetail = () => {
             />
             <button onClick={sendMessage}>전송</button>
           </MessageInputContainer>
-
         </>
       )}
       <Footer />
