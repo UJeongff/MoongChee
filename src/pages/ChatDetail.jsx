@@ -111,7 +111,9 @@ const ChatDetail = () => {
 
   // 채팅 메시지 로딩
   const fetchMessages = async () => {
-    console.log("Fetching messages for roomId:", roomId); // 로그 추가
+    console.log("Fetching messages for roomId:", roomId); // roomId 로그 추가
+    console.log("Page:", page, "Size:", size); // page와 size 값 로그 추가
+    
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/chats/chatting/${roomId}/${page}/${size}`,
@@ -121,19 +123,21 @@ const ChatDetail = () => {
           },
         }
       );
-      console.log("Response data:", response.data); // 서버 응답 데이터 로그 확인
+  
+      console.log("Response data:", response.data); // 서버 응답 데이터 로그 추가
+  
       if (response.data && response.data.data.length > 0) {
-        console.log("Messages fetched:", response.data.data); // 로그 추가
+        console.log("Messages fetched:", response.data.data); // 메시지 조회 성공 시 로그 추가
         setMessages(response.data.data);
       } else {
-        console.log("No messages found.");
+        console.log("No messages found."); // 메시지가 없을 경우 로그
         setMessages([]); // 메시지가 없으면 빈 배열로 설정
       }
     } catch (error) {
-      console.error("Failed to fetch messages:", error);
+      console.error("Failed to fetch messages:", error); // 에러 로그
     }
   };
-
+  
   // WebSocket 연결 및 메시지 처리
   useEffect(() => {
     if (!roomId) {
