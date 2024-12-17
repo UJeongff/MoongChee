@@ -122,10 +122,10 @@ const ChatDetail = () => {
       onConnect: (frame) => {
         console.log("WebSocket connected:", frame);
         setLoading(false);
-
+    
         const subscriptionPath = `/sub/chats/${roomId}`;
         console.log("Subscribing to:", subscriptionPath);
-
+    
         stompClient.subscribe(subscriptionPath, (message) => {
           console.log("Received message:", message.body);
           if (message.body) {
@@ -140,7 +140,7 @@ const ChatDetail = () => {
           }
         });
       },
-      
+    
       onStompError: (frame) => {
         console.error("WebSocket error:", frame);
         alert("WebSocket 연결에 실패했습니다.");
@@ -151,7 +151,7 @@ const ChatDetail = () => {
         console.warn("WebSocket disconnected. Attempting to reconnect...");
       },
     });
-
+    
     stompClient.activate();
     setClient(stompClient);
 
