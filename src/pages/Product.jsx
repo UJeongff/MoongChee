@@ -745,7 +745,7 @@ const Product = () => {
           <div className="value">{product.price}원</div>
         </InfoRow>
         <ButtonContainer>
-          <button className="chat-btn" onClick={createChatRoom}>
+          <button className="chat-btn" onClick={() => setIsModalOpen(true)}>
             1:1 채팅
           </button>
           <button className="heart-btn" onClick={handleFavoriteToggle}>
@@ -842,9 +842,7 @@ const Product = () => {
             </button>
             <button
               className="chat-btn"
-              onClick={() => {
-                setIsModalOpen(true); // 약관 확인 모달 열기
-              }}
+              
               disabled={!checklist.termsConfirmed}
               style={{
                 backgroundColor: checklist.termsConfirmed
