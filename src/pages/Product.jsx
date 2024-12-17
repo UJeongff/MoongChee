@@ -297,7 +297,7 @@ const Product = () => {
     userInfo,
     isLoggedIn,
   } = useContext(UserContext);
-
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]); 
   const [isModalOpen, setIsModalOpen] = useState(false);
