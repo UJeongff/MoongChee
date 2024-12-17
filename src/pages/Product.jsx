@@ -484,73 +484,49 @@ const Product = () => {
   };
 
   const createChatRoom = async () => {
-    const buyerId = userInfo?.id; // 현재 로그인된 사용자 ID
-    const sellerId = product?.userId; // 상품 등록한 사용자 ID
+    const buyerId = userInfo?.id;
+    const sellerId = product?.userId;
   
-    // 1. buyerId와 sellerId가 같을 때는 채팅방 생성 요청을 하지 않음
     if (buyerId === sellerId) {
       alert("본인에게 채팅을 보낼 수 없습니다.");
-      return;
+      return null; // 실패 시 null 반환
     }
   
-    if (!buyerId || !sellerId) {
-      alert("유효한 사용자 정보가 없습니다.");
-      return;
-    }
-  
-    // 2. apiUrl 변수 확인 및 정의
-    const apiUrl =
-      import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
+    const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
   
     try {
-      // 3. 채팅방 존재 여부 확인
+      // 채팅방 확인
       const checkResponse = await axios.get(
         `${apiUrl}/api/v1/chatRooms/${buyerId}/${sellerId}`,
         {
-          headers: {
-            Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
-          },
+          headers: { Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}` },
         }
       );
   
       if (checkResponse.status === 200 && checkResponse.data?.data?.roomId) {
-        const existingRoomId = checkResponse.data.data.roomId;
-        console.warn("기존 채팅방이 존재합니다. 기존 채팅방으로 이동합니다.");
-        navigate(`/chat/${existingRoomId}`);
-        return;
+        return checkResponse.data.data.roomId; // 기존 채팅방 roomId 반환
       }
     } catch (error) {
-      // 채팅방이 존재하지 않을 경우에만 POST 요청 수행
-      if (error.response?.status !== 400) {
-        console.error(
-          "채팅방 확인 중 에러:",
-          error.response?.data || error.message
-        );
-        alert("채팅방 확인 중 오류가 발생했습니다.");
-        return;
-      }
+      console.warn("기존 채팅방 없음, 새 채팅방 생성 진행...");
     }
   
-    // 4. 채팅방 생성 요청
     try {
+      // 새 채팅방 생성
       const createResponse = await axios.post(
         `${apiUrl}/api/v1/chatRooms`,
         { user1Id: buyerId, user2Id: sellerId },
         {
-          headers: {
-            Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
-          },
+          headers: { Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}` },
         }
       );
   
       if (createResponse.status === 200 || createResponse.status === 201) {
-        const newRoomId = createResponse.data.data.roomId;
-        console.log("새로운 채팅방이 생성되었습니다.");
-        navigate(`/chat/${newRoomId}`);
+        return createResponse.data.data.roomId; // 새 채팅방 roomId 반환
       }
     } catch (error) {
       console.error("채팅방 생성 에러:", error.response?.data || error.message);
       alert("채팅방 생성 중 오류가 발생했습니다.");
+      return null;
     }
   };
   
@@ -842,18 +818,22 @@ const Product = () => {
             </button>
             <button
               className="chat-btn"
-              
               disabled={!checklist.termsConfirmed}
               style={{
-                backgroundColor: checklist.termsConfirmed
-                  ? "#007bff"
-                  : "#f0f0f0",
+                backgroundColor: checklist.termsConfirmed ? "#007bff" : "#f0f0f0",
                 color: checklist.termsConfirmed ? "white" : "#888",
               }}
-              onClick={confirmChat}
+              onClick={async () => {
+                const roomId = await createChatRoom(); // 채팅방 생성 후 roomId 반환
+                if (roomId) {
+                  setIsModalOpen(false); // 모달 닫기
+                  navigate(`/chat/${roomId}`); // 올바른 roomId로 이동
+                }
+              }}
             >
               채팅 시작
             </button>
+
           </ButtonContainer>
         </ModalContent>
       </Modal>
