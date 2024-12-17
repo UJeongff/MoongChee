@@ -303,6 +303,7 @@ const Product = () => {
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]); 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false); // 이미지 모달 상태 추가
   const [checklist, setChecklist] = useState({
     terms1: false,
     terms2: false,
@@ -608,7 +609,7 @@ const Product = () => {
         </div>
         <div className="title">상품 상세 정보</div>
       </Header>
-      <ProductImageContainer onClick={() => setIsModalOpen(true)}>
+      <ProductImageContainer onClick={() => setIsImageModalOpen(true)}>
         {product.productImageUrls && product.productImageUrls.length > 1 ? (
           <>
             <ArrowButton className="left" onClick={(e) => { e.stopPropagation(); prevImage(); }}>
