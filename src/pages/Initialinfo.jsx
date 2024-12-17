@@ -243,21 +243,19 @@ const InitialInfo = () => {
       <Header>초기 정보 입력</Header>
       <Content>
         <InputGroup>
-        <div>
-          <label>학생증 사진을 첨부하세요</label>
+          <label>학생증 사진</label>
           {selectedFile ? (
-            <span>선택된 파일: {selectedFile.name}</span>
+            <ImagePreview src={form.profileImage} alt="학생증 미리보기" />
           ) : (
-            <span>학생증 사진이 선택되지 않았습니다.</span>
+            <div>학생증 사진을 첨부해주세요.</div> 
           )}
-          <input
-            type="file"
-            id="profileImage"
-            accept="image/*"
-            onChange={handleImageUpload}
-          />
-          {errors.profileImage && <div className="error">{errors.profileImage}</div>}
-        </div>
+            <input
+              type="file"
+              id="profileImage"
+              accept="image/*"
+              onChange={handleImageUpload}
+            />
+            {errors.profileImage && <div className="error">{errors.profileImage}</div>}
         </InputGroup>
         <InputGroup>
           <label>이메일</label>
