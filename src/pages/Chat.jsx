@@ -98,7 +98,7 @@ const Chat = () => {
 
         // API 경로 수정
         const response = await axios.get(
-          `${apiUrl}/api/v1/chatRoom/chattingList/${userInfo.id}`,
+          `${apiUrl}/api/v1/chats/chattingList/${userInfo.id}`,
           {
             headers: { Authorization: `Bearer ${userInfo.jwtToken.accessToken}` },
           }
