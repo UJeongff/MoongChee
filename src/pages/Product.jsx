@@ -74,11 +74,14 @@ const FullScreenModal = styled.div`
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  padding: 16px; /* 화면 테두리와의 간격 추가 */
 `;
 
 const FullScreenImage = styled.img`
-  max-width: 90%;
-  max-height: 90%;
+  width: 100%;
+  max-width: 100%;    /* 화면의 너비를 초과하지 않도록 설정 */
+  height: auto;
+  max-height: 100%;   /* 화면의 높이를 초과하지 않도록 설정 */
   object-fit: contain;
   border-radius: 8px;
 `;
