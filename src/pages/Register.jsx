@@ -319,16 +319,30 @@ const Register = () => {
   // 파일 업로드 핸들러
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files);
-
+  
     if (selectedFiles.length + files.length > 10) {
       alert("이미지는 최대 10장까지 등록할 수 있습니다.");
       return;
     }
-
-    const previews = files.map((file) => URL.createObjectURL(file));
-    setSelectedFiles((prev) => [...prev, ...files]);
+  
+    const validFiles = files.filter((file) => {
+      const isValidExtension = ["image/jpeg", "image/png", "image/jpg"].includes(file.type);
+      const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB 이하
+  
+      if (!isValidExtension) {
+        alert("허용된 확장자: JPEG, PNG, JPG만 가능합니다.");
+      }
+      if (!isValidSize) {
+        alert("각 파일의 최대 크기는 5MB입니다.");
+      }
+  
+      return isValidExtension && isValidSize;
+    });
+  
+    const previews = validFiles.map((file) => URL.createObjectURL(file));
+    setSelectedFiles((prev) => [...prev, ...validFiles]);
     setPreviewImages((prev) => [...prev, ...previews]);
-  };
+  };  
 
   const handleRemoveImage = (index) => {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
