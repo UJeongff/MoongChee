@@ -404,21 +404,16 @@ const Product = () => {
   };
 
   const createChatRoom = async () => {
-    if (!product) {
-      alert("상품 정보를 불러오지 못했습니다.");
+    const buyerId = userInfo?.id;      // 현재 로그인된 사용자 ID
+    const sellerId = product?.userId;  // 상품 등록한 사용자 ID
+  
+    if (!buyerId || !sellerId) {
+      alert("유효한 사용자 정보가 없습니다.");
       return;
     }
   
     try {
       const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
-      const buyerId = userInfo?.id;
-      const sellerId = product?.userId;
-  
-      if (!buyerId || !sellerId) {
-        alert("유효한 사용자 정보가 없습니다.");
-        return;
-      }
-  
       const response = await axios.post(
         `${apiUrl}/api/v1/chatRooms`,
         { user1Id: buyerId, user2Id: sellerId },
@@ -432,11 +427,10 @@ const Product = () => {
       if (response.status === 200 || response.status === 201) {
         const roomId = response.data.data.roomId;
         navigate(`/chat/${roomId}`);
-      } else {
-        alert("채팅방 생성에 실패했습니다.");
       }
     } catch (error) {
       if (error.response?.status === 400 && error.response.data?.data?.roomId) {
+        // 중복된 채팅방이 있을 경우, 해당 채팅방으로 이동
         const existingRoomId = error.response.data.data.roomId;
         navigate(`/chat/${existingRoomId}`);
       } else {
@@ -444,9 +438,6 @@ const Product = () => {
         alert(error.response?.data?.message || "채팅방 생성 중 오류가 발생했습니다.");
       }
     }
-    console.log("buyerId:", buyerId);
-    console.log("sellerId:", sellerId);    
-
   };  
   
   const confirmChat = () => {
