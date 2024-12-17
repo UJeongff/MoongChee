@@ -443,47 +443,41 @@ const Edit = () => {
             <img src={src} alt={`기존 이미지 ${index + 1}`} />
             <button
               className="remove-btn"
-              onClick={() => handleRemoveExistingImage(index)}
+              onClick={() => handleRemoveImage(index, true)} // 기존 이미지 삭제
             >
               ✕
             </button>
           </div>
         ))}
 
-        {/* 새 이미지 표시 */}
-        {productImages.map((file, index) => (
+        {/* 새로 업로드한 이미지 표시 */}
+        {selectedFiles.map((file, index) => (
           <div className="upload-box" key={`new-${index}`}>
-            <img
-              src={URL.createObjectURL(file)}
-              alt={`새 이미지 ${index + 1}`}
-            />
+            <img src={URL.createObjectURL(file)} alt={`새 이미지 ${index + 1}`} />
             <button
               className="remove-btn"
-              onClick={() => handleRemoveNewImage(index)}
+              onClick={() => handleRemoveImage(index, false)} // 새 이미지 삭제
             >
               ✕
             </button>
           </div>
         ))}
 
-        {/* 업로드 박스 */}
-        {existingImages.length + productImages.length < 10 && (
-          <div
-            className="upload-box"
-            onClick={() => fileInputRef.current.click()}
-          >
+        {/* 업로드 버튼 */}
+        {existingImages.length + selectedFiles.length < 10 && (
+          <div className="upload-box" onClick={() => fileInputRef.current.click()}>
             + 사진 추가
           </div>
         )}
         <input
-        ref={fileInputRef} // input 참조
-        type="file"
-        accept="image/*"
-        multiple
-        style={{ display: "none" }} // 숨김 처리
-        onChange={handleFileUpload} // 파일 선택 핸들러
-      />
-    </UploadSection>
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          style={{ display: "none" }}
+          onChange={handleFileUpload}
+        />
+      </UploadSection>
 
       <InputRow>
         <label>상품명</label>
