@@ -418,7 +418,8 @@ const Product = () => {
   
       const response = await axios.post(
         `${apiUrl}/api/v1/chatRooms`,
-        { user1Id: buyerId, user2Id: sellerId },
+        { user1Id: buyerId, 
+          user2Id: sellerId },
         {
           headers: {
             Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
@@ -440,6 +441,7 @@ const Product = () => {
         alert(error.response?.data?.message || "채팅방 생성 중 오류가 발생했습니다.");
       }
     }
+    console.log("Request Payload:", { user1Id: buyerId, user2Id: sellerId });
   };
   
   const confirmChat = () => {
