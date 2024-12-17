@@ -246,9 +246,7 @@ const InitialInfo = () => {
           <label>학생증 사진</label>
           {selectedFile ? (
             <ImagePreview src={form.profileImage} alt="학생증 미리보기" />
-          ) : (
-            <div>학생증 사진을 첨부해주세요.</div> 
-          )}
+          ) : null}
             <input
               type="file"
               id="profileImage"
