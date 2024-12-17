@@ -488,10 +488,32 @@ const Product = () => {
   
     try {
       const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100.nip.io";
+      
+      // 1. 채팅방 존재 여부 확인
+      const checkResponse = await axios.get(`${apiUrl}/api/v1/chatRooms/${buyerId}/${sellerId}`, {
+        headers: {
+          Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
+        },
+      });
   
-      console.log("Creating chat room with:", { buyerId, sellerId });
+      if (checkResponse.status === 200 && checkResponse.data?.data?.roomId) {
+        // 채팅방이 이미 존재하는 경우, 기존 채팅방으로 이동
+        const existingRoomId = checkResponse.data.data.roomId;
+        console.warn("기존 채팅방이 존재합니다. 기존 채팅방으로 이동합니다.");
+        navigate(`/chat/${existingRoomId}`);
+        return;
+      }
+    } catch (error) {
+      if (error.response?.status !== 400) {
+        console.error("채팅방 확인 중 에러:", error.response?.data || error.message);
+        alert(error.response?.data?.message || "채팅방 확인 중 오류가 발생했습니다.");
+        return;
+      }
+    }
   
-      const response = await axios.post(
+    try {
+      // 2. 채팅방이 존재하지 않는 경우 새로 생성
+      const createResponse = await axios.post(
         `${apiUrl}/api/v1/chatRooms`,
         { user1Id: buyerId, user2Id: sellerId },
         {
@@ -501,20 +523,13 @@ const Product = () => {
         }
       );
   
-      if (response.status === 200 || response.status === 201) {
-        const roomId = response.data.data.roomId;
-        navigate(`/chat/${roomId}`);
+      if (createResponse.status === 200 || createResponse.status === 201) {
+        const newRoomId = createResponse.data.data.roomId;
+        navigate(`/chat/${newRoomId}`);
       }
     } catch (error) {
-      if (error.response?.status === 400 && error.response.data?.data?.roomId) {
-        // 중복된 채팅방이 있을 경우, 해당 채팅방으로 이동
-        const existingRoomId = error.response.data.data.roomId;
-        console.log("Existing chat room found:", existingRoomId);
-        navigate(`/chat/${existingRoomId}`);
-      } else {
-        console.error("채팅방 생성 에러:", error.response?.data || error.message);
-        alert(error.response?.data?.message || "채팅방 생성 중 오류가 발생했습니다.");
-      }
+      console.error("채팅방 생성 에러:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "채팅방 생성 중 오류가 발생했습니다.");
     }
   };
   
