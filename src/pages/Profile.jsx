@@ -9,6 +9,8 @@ import axios from "axios";
 const StyledHeader = styled.header`
   display: flex;
   align-items: center;
+  justify-content: center; /* 가로 방향 중앙 정렬 */
+  position: relative; /* 자식 요소를 상대적 위치로 배치 */
   width: 100%;
   height: 60px;
   background-color: white;
@@ -19,17 +21,18 @@ const StyledHeader = styled.header`
   z-index: 1000;
 
   .back-icon {
+    position: absolute; /* 왼쪽에 고정 */
+    left: 16px;
     font-size: 20px;
     color: #333;
     cursor: pointer;
-    margin-left: 16px;
   }
 
   h1 {
     font-size: 18px;
     font-weight: bold;
     color: #333;
-    margin: 0 auto;
+    margin: 0;
     text-align: center;
   }
 `;
