@@ -243,7 +243,7 @@ const InitialInfo = () => {
       <Header>초기 정보 입력</Header>
       <Content>
         <InputGroup>
-          <label>학생증 사진</label>
+          <label>프로필 이미지(학생증 사진 첨부)</label>
           {selectedFile ? (
             <ImagePreview src={form.profileImage} alt="학생증 미리보기" />
           ) : null}
