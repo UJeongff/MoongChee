@@ -112,7 +112,7 @@ const ChatDetail = () => {
     console.log("roomId:", roomId);
 
     const stompClient = new Client({
-      brokerURL: "wss://43.203.202.100.nip.io",
+      brokerURL: "wss://43.203.202.100.nip.io/ws", // 여기서만 /ws 포함
       connectHeaders: {
         Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
       },
@@ -120,7 +120,12 @@ const ChatDetail = () => {
       onConnect: () => {
         console.log("WebSocket connected");
         setLoading(false);
-        stompClient.subscribe(`/ws/sub/chats/messages/${roomId}`, (message) => {
+    
+        // 구독 경로에서 /ws를 제외
+        const subscriptionPath = `/sub/chats/${roomId}`;
+        console.log("Subscribing to:", subscriptionPath);
+    
+        stompClient.subscribe(subscriptionPath, (message) => {
           console.log("Received message:", message.body);
           if (message.body) {
             const receivedMessage = JSON.parse(message.body);
@@ -137,15 +142,16 @@ const ChatDetail = () => {
       onStompError: (frame) => {
         console.error("WebSocket error:", frame);
         alert("WebSocket 연결에 실패했습니다.");
+        setLoading(false);
         navigate("/chat");
       },
       onDisconnect: () => {
         console.warn("WebSocket disconnected. Attempting to reconnect...");
       },
     });
-
+    
     stompClient.activate();
-    setClient(stompClient);
+    setClient(stompClient);    
 
     return () => {
       stompClient.deactivate();
@@ -161,7 +167,7 @@ const ChatDetail = () => {
     if (input.trim()) {
       try {
         client.publish({
-          destination: "/ws/pub/chats/messages",
+          destination: "/pub/chats/messages",
           body: JSON.stringify({
             roomId,
             senderId: userInfo.id,
