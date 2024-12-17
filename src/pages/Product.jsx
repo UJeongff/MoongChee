@@ -50,14 +50,36 @@ const ProductImageContainer = styled.div`
   height: 200px;
   overflow: hidden;
   border-radius: 8px;
-  margin-bottom: 16px;
+  margin: 16px 0; /* 헤더와의 간격 추가 */
   cursor: pointer;
 `;
 
 const ProductImage = styled.img`
   width: 100%;
-  max-height: 400px;
-  object-fit: contain; /* 이미지가 잘리지 않고 전체가 보이도록 설정 */
+  height: 100%;
+  object-fit: cover;        /* 이미지가 잘리지 않고 중앙 부분을 보여줌 */
+  object-position: center;  /* 중앙 정렬 */
+  border-radius: 8px;
+`;
+
+// 이미지 전체 화면 모달 스타일
+const FullScreenModal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+const FullScreenImage = styled.img`
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
   border-radius: 8px;
 `;
 
@@ -631,16 +653,13 @@ const Product = () => {
         )}
       </ProductImageContainer>
 
-      {isModalOpen && (
-        <Modal $isOpen={isModalOpen} onClick={() => setIsModalOpen(false)}>
-          <ModalContent>
-            <img
-              src={product.productImageUrls[currentImageIndex]}
-              alt={`상품 이미지 ${currentImageIndex + 1}`}
-              style={{ width: '100%', maxHeight: '80vh', objectFit: 'contain' }}
-            />
-          </ModalContent>
-        </Modal>
+      {isImageModalOpen && (
+        <FullScreenModal onClick={() => setIsImageModalOpen(false)}>
+          <FullScreenImage
+            src={product.productImageUrls[currentImageIndex]}
+            alt={`상품 이미지 ${currentImageIndex + 1}`}
+          />
+        </FullScreenModal>
       )}
 
         <ProductDetails>
