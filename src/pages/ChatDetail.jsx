@@ -98,8 +98,8 @@ const Loading = styled.div`
 `;
 
 const ChatDetail = () => {
-  const { id: roomId } = useParams();
-  console.log("roomId from useParams:", roomId);
+  const { roomId } = useParams();  // 여기서 roomId를 가져옵니다.
+  const [resolvedRoomId, setResolvedRoomId] = useState(null); // roomId 상태 저장
   const { userInfo } = useContext(UserContext);
   const navigate = useNavigate();
   const [client, setClient] = useState(null);
@@ -108,15 +108,15 @@ const ChatDetail = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!roomId) {
+      console.log("roomId is missing, redirecting to chat list...");
+      navigate("/chat"); // roomId가 없으면 채팅 목록으로 이동
+      return;
+    }
+
+    setResolvedRoomId(roomId); // roomId가 있으면 상태에 저장
     console.log("roomId:", roomId);
-    console.log("userInfo:", userInfo);
-    console.log("Authorization Token:", userInfo?.jwtToken?.accessToken);
-    if (!roomId) return;
-  
-    console.log("roomId:", roomId);
-    console.log("userInfo:", userInfo);
-    console.log("Authorization Token:", userInfo?.jwtToken?.accessToken);
-  
+
     const stompClient = new Client({
       brokerURL: "wss://43.203.202.100.nip.io/ws", // WebSocket URL
       connectHeaders: {
@@ -126,10 +126,10 @@ const ChatDetail = () => {
       onConnect: (frame) => {
         console.log("WebSocket connected:", frame);
         setLoading(false);
-    
+
         const subscriptionPath = `/sub/chats/${roomId}`;
         console.log("Subscribing to:", subscriptionPath);
-    
+
         stompClient.subscribe(subscriptionPath, (message) => {
           console.log("Received message:", message.body);
           if (message.body) {
@@ -154,16 +154,16 @@ const ChatDetail = () => {
         console.warn("WebSocket disconnected. Attempting to reconnect...");
       },
     });
-  
+
     stompClient.activate();
     setClient(stompClient);
-  
+
     return () => {
       console.log("WebSocket connection deactivating...");
       stompClient.deactivate();
     };
   }, [roomId, userInfo, navigate]);
-  
+
   const sendMessage = () => {
     if (!client || !client.connected) {
       alert("WebSocket에 연결되지 않았습니다.");
