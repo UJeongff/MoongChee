@@ -842,6 +842,9 @@ const Product = () => {
             </button>
             <button
               className="chat-btn"
+              onClick={() => {
+                setIsModalOpen(true); // 약관 확인 모달 열기
+              }}
               disabled={!checklist.termsConfirmed}
               style={{
                 backgroundColor: checklist.termsConfirmed
