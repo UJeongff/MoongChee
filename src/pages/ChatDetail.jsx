@@ -121,6 +121,7 @@ const ChatDetail = () => {
           },
         }
       );
+      console.log("Response data:", response.data); // 서버 응답 데이터 로그 확인
       if (response.data && response.data.data) {
         console.log("Messages fetched:", response.data.data); // 로그 추가
         setMessages(response.data.data);
