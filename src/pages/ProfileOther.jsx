@@ -113,10 +113,7 @@ const ProfileOther = () => {
   if (!userId) {
     return (
       <Container>
-        <Header>
-          <BackButton onClick={() => navigate(-1)}>←</BackButton>
-          사용자 정보
-        </Header>
+        <Header>사용자 정보</Header>
 
         <Content>
           <p>사용자 정보를 찾을 수 없습니다.</p>
@@ -129,7 +126,10 @@ const ProfileOther = () => {
 
   return (
     <Container>
-      <Header>사용자 정보</Header>
+      <Header>
+        <BackButton onClick={() => navigate(-1)}>←</BackButton>
+        사용자 정보
+      </Header>
       <Content>
         {loading ? (
           <p>로딩 중...</p>

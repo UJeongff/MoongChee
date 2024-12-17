@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useRef } from "react";
 import styled from "styled-components";
 import { UserContext } from "../contexts/UserContext.jsx";
 import { useNavigate, useParams } from "react-router-dom";
@@ -32,22 +32,48 @@ const Header = styled.header`
 
 const UploadSection = styled.section`
   display: flex;
-  align-items: center;
+  overflow-x: auto; /* 가로 스크롤 */
+  gap: 8px;
   margin: 16px 0;
-  gap: 10px;
-  width: 100%;
+  padding: 10px;
+  background-color: #f9f9f9;
 
   .upload-box {
+    flex-shrink: 0;
     width: 100px;
     height: 100px;
     border: 1px dashed #ddd;
     display: flex;
     justify-content: center;
     align-items: center;
-    text-align: center;
     font-size: 12px;
     color: #555;
     cursor: pointer;
+    border-radius: 8px;
+    position: relative;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .remove-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      text-align: center;
+      line-height: 20px;
+      font-size: 12px;
+      cursor: pointer;
+    }
   }
 `;
 
@@ -209,6 +235,9 @@ const Edit = () => {
   });
 
   const [productImages, setProductImages] = useState([]);
+  const [previewImages, setPreviewImages] = useState([]); // 이미지 미리보기
+  const [selectedFiles, setSelectedFiles] = useState([]); // 새로 업로드된 파일
+  const [existingImages, setExistingImages] = useState([]); // 기존 이미지
 
   const keywordToCategoryMap = {
     BOOK: "서적",
@@ -313,16 +342,14 @@ const Edit = () => {
       formData.append("requestDTO", JSON.stringify(requestDTO));
 
       // 이미지 파일 추가
-      if (productImages && productImages.length > 0) {
-        productImages.forEach((file) => {
-          // 기존 이미지 URL과 새 파일을 모두 처리
-          if (typeof file === "string") {
-            formData.append("existingImages", file); // 기존 이미지 URL
-          } else {
-            formData.append("productImages", file); // 새로 업로드한 파일
-          }
-        });
-      }
+      existingImages.forEach((url) => {
+        formData.append("existingImages", url);
+      });
+
+      // 새 이미지 추가
+      selectedFiles.forEach((file) => {
+        formData.append("productImages", file);
+      });
 
       // API 요청
       const response = await axios.patch(`${apiUrl}/posts/${id}`, formData, {
@@ -374,7 +401,24 @@ const Edit = () => {
 
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files);
-    setProductImages((prev) => [...prev, ...files]);
+
+    if (existingImages.length + selectedFiles.length + files.length > 10) {
+      alert("이미지는 최대 10장까지 등록할 수 있습니다.");
+      return;
+    }
+
+    const previews = files.map((file) => URL.createObjectURL(file));
+    setSelectedFiles((prev) => [...prev, ...files]);
+    setPreviewImages((prev) => [...prev, ...previews]);
+  };
+
+  const handleRemoveImage = (index, isExisting) => {
+    if (isExisting) {
+      setExistingImages((prev) => prev.filter((_, i) => i !== index));
+    } else {
+      setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+      setPreviewImages((prev) => prev.filter((_, i) => i !== index));
+    }
   };
 
   const onChangeInput = (e) => {
@@ -389,32 +433,61 @@ const Edit = () => {
     <Container>
       <Header>상품 수정</Header>
       <UploadSection>
-        <div className="upload-box">
-          <label>
-            {productImages.length > 0
-              ? productImages.map((file, index) => (
-                  <img
-                    key={index}
-                    src={
-                      typeof file === "string"
-                        ? file
-                        : URL.createObjectURL(file)
-                    }
-                    alt={`미리보기 ${index + 1}`}
-                    style={{ width: "100px", marginRight: "5px" }}
-                  />
-                ))
-              : "사진/동영상"}
+        {/* 기존 이미지 표시 */}
+        {existingImages.map((src, index) => (
+          <div className="upload-box" key={`existing-${index}`}>
+            <img src={src} alt={`기존 이미지 ${index + 1}`} />
+            <button
+              className="remove-btn"
+              onClick={() => handleRemoveExistingImage(index)}
+            >
+              ✕
+            </button>
+          </div>
+        ))}
 
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileUpload}
-              multiple
-              style={{ display: "none" }}
+        {/* 새 이미지 표시 */}
+        {productImages.map((file, index) => (
+          <div className="upload-box" key={`new-${index}`}>
+            <img
+              src={URL.createObjectURL(file)}
+              alt={`새 이미지 ${index + 1}`}
             />
-          </label>
-        </div>
+            <button
+              className="remove-btn"
+              onClick={() => handleRemoveNewImage(index)}
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+
+        {/* 업로드 박스 */}
+        {existingImages.length + productImages.length < 10 && (
+          <div
+            className="upload-box"
+            onClick={() => fileInputRef.current.click()}
+          >
+            + 사진 추가
+          </div>
+        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={(e) => {
+            const files = Array.from(e.target.files);
+            if (
+              existingImages.length + productImages.length + files.length >
+              10
+            ) {
+              alert("이미지는 최대 10장까지 등록할 수 있습니다.");
+              return;
+            }
+            setProductImages((prev) => [...prev, ...files]);
+          }}
+        />
       </UploadSection>
 
       <InputRow>

@@ -65,21 +65,24 @@ const ProductCard = styled.div`
   .product-details {
     display: flex;
     flex-direction: column;
+    justify-content: space-between; /* 상단, 중간, 하단 정렬 */
+    align-items: flex-start; /* 왼쪽 정렬 */
+    width: 100%; /* 남은 너비 모두 차지 */
 
     .product-title {
       font-size: 16px;
       font-weight: bold;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
 
     .product-info {
       font-size: 14px;
       color: #555;
+      margin-bottom: 4px;
     }
 
     .product-price {
       font-size: 14px;
-      font-weight: bold;
       color: #333;
     }
   }
@@ -168,7 +171,6 @@ const SearchResult = () => {
                   {product.price}원{" "}
                   <span
                     style={{
-                      fontWeight: "bold",
                       color: product.tradeType === "SALE" ? "blue" : "red",
                       marginLeft: "8px",
                     }}

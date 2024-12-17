@@ -33,35 +33,48 @@ const Header = styled.header`
 
 const UploadSection = styled.section`
   display: flex;
-  align-items: center;
+  overflow-x: auto; /* 가로 스크롤 */
+  gap: 8px;
   margin: 16px 0;
-  gap: 10px;
-  width: 100%;
+  padding: 10px;
+  background-color: #f9f9f9;
 
   .upload-box {
+    flex-shrink: 0;
     width: 100px;
     height: 100px;
     border: 1px dashed #ddd;
     display: flex;
     justify-content: center;
     align-items: center;
-    text-align: center;
     font-size: 12px;
     color: #555;
     cursor: pointer;
-    position: relative;
-    overflow: hidden;
-  }
-
-  input[type="file"] {
-    display: none;
-  }
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
     border-radius: 8px;
+    position: relative;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .remove-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      text-align: center;
+      line-height: 20px;
+      font-size: 12px;
+      cursor: pointer;
+    }
   }
 `;
 
@@ -306,11 +319,20 @@ const Register = () => {
   // 파일 업로드 핸들러
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files);
-    if (files.length > 0) {
-      setSelectedFiles((prevFiles) => [...prevFiles, ...files]);
-      const previews = files.map((file) => URL.createObjectURL(file));
-      setPreviewImages((prevPreviews) => [...prevPreviews, ...previews]);
+
+    if (selectedFiles.length + files.length > 10) {
+      alert("이미지는 최대 10장까지 등록할 수 있습니다.");
+      return;
     }
+
+    const previews = files.map((file) => URL.createObjectURL(file));
+    setSelectedFiles((prev) => [...prev, ...files]);
+    setPreviewImages((prev) => [...prev, ...previews]);
+  };
+
+  const handleRemoveImage = (index) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviewImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   // 카테고리 선택 핸들러
@@ -422,22 +444,27 @@ const Register = () => {
     <Container>
       <Header>상품 등록</Header>
       <UploadSection>
-        <div
-          className="upload-box"
-          onClick={() => fileInputRef.current.click()}
-        >
-          {previewImages.length > 0
-            ? previewImages.map((src, index) => (
-                <img
-                  key={index}
-                  src={src}
-                  alt={`미리보기 ${index + 1}`}
-                  style={{ marginRight: "5px" }}
-                />
-              ))
-            : "사진/동영상 업로드"}
-        </div>
+        {previewImages.map((src, index) => (
+          <div className="upload-box" key={`new-${index}`}>
+            <img src={src} alt={`미리보기 ${index + 1}`} />
+            <button
+              className="remove-btn"
+              onClick={() => handleRemoveImage(index)}
+            >
+              ✕
+            </button>
+          </div>
+        ))}
 
+        {/* 업로드 박스 (10장 미만 시만 표시) */}
+        {selectedFiles.length < 10 && (
+          <div
+            className="upload-box"
+            onClick={() => fileInputRef.current.click()}
+          >
+            + 사진 추가
+          </div>
+        )}
         <input
           ref={fileInputRef}
           type="file"
@@ -446,6 +473,7 @@ const Register = () => {
           onChange={handleFileUpload}
         />
       </UploadSection>
+
       <InputRow>
         <label>상품명</label>
         <input

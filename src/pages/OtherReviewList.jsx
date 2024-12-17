@@ -3,16 +3,33 @@ import styled from "styled-components";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import { UserContext } from "../contexts/UserContext.jsx";
-import Header from "../components/Header";
 import Footer from "../components/Footer";
 
-const BackButton = styled.span`
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  font-size: 20px;
-  color: #333;
-  cursor: pointer;
+const StyledHeader = styled.header`
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 60px;
+  background-color: white;
+  border-bottom: 1px solid #ddd;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  .back-icon {
+    font-size: 20px;
+    color: #333;
+    cursor: pointer;
+    margin-left: 16px;
+  }
+
+  h1 {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin: 0 auto;
+  }
 `;
 
 const Container = styled.div`
@@ -140,8 +157,13 @@ const OtherReviewList = () => {
 
   return (
     <Container>
-      <BackButton onClick={() => navigate(`/product/${userId}`)}>←</BackButton>
-      <Header title="상대방 리뷰" />
+      <StyledHeader>
+        <div className="back-icon" onClick={() => navigate(-1)}>
+          ←
+        </div>
+        <h1>상대방 리뷰</h1>
+      </StyledHeader>
+
       <Content>
         {loading ? (
           <p>리뷰 로딩 중...</p>
