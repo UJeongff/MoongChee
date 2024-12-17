@@ -127,7 +127,7 @@ const ChatDetail = () => {
         console.log("WebSocket connected:", frame);
         setLoading(false);
 
-        const subscriptionPath = `/sub/${roomId}`;
+        const subscriptionPath = `/sub/chats/${roomId}`;
         console.log("Subscribing to:", subscriptionPath);
 
         stompClient.subscribe(subscriptionPath, (message) => {
@@ -181,7 +181,7 @@ const ChatDetail = () => {
         console.log("Sending message:", messagePayload);
 
         client.publish({
-          destination: "/pub/messages",
+          destination: "/pub/chats/messages",
           body: JSON.stringify(messagePayload),
         });
         setInput("");
