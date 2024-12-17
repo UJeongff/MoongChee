@@ -107,6 +107,9 @@ const ChatDetail = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("roomId:", roomId);
+    console.log("userInfo:", userInfo);
+    console.log("Authorization Token:", userInfo?.jwtToken?.accessToken);
     if (!roomId) return;
   
     console.log("roomId:", roomId);
