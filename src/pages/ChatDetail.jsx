@@ -298,3 +298,4 @@ const ChatDetail = () => {
 };
 
 export default ChatDetail;
+
