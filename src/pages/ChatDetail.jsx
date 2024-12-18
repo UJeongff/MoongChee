@@ -263,7 +263,7 @@ const ChatDetail = () => {
           <div className="product-name">{ongoingProducts[0]?.productName}</div> {/* 고정된 상품 이름 사용 */}
         </div>
       </ProductInfoContainer>
-      <ReviewButton onClick={() => navigate(`/review/${roomId}`)}>리뷰쓰기</ReviewButton>
+      <ReviewButton onClick={() => navigate(`/review/4`)}>리뷰쓰기</ReviewButton>
       {loading ? (
         <Loading>Loading...</Loading>
       ) : (
