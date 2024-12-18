@@ -133,7 +133,7 @@ const Loading = styled.div`
 
 const ChatDetail = () => {
   const { roomId } = useParams();
-  const { userInfo } = useContext(UserContext);
+  const { userInfo, ongoingProducts } = useContext(UserContext); // ongoingProducts 사용
   const navigate = useNavigate();
   const [client, setClient] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -142,10 +142,6 @@ const ChatDetail = () => {
   const [reconnecting, setReconnecting] = useState(false);
   const [page, setPage] = useState(0); // 페이지 번호 상태
   const [size] = useState(40); // 페이지 당 메시지 수
-  const [productInfo, setProductInfo] = useState({
-    productName: "",
-    productImage: "",
-  });
 
   // 채팅 메시지 로딩
   const fetchMessages = async () => {
@@ -175,30 +171,6 @@ const ChatDetail = () => {
       console.error("Failed to fetch messages:", error);
     }
   };
-
-  // 상품 정보 로딩
-  useEffect(() => {
-    const fetchProductInfo = async () => {
-      const apiUrl = "http://43.203.202.100:8080/api/v1";
-      try {
-        const response = await axios.get(`${apiUrl}/posts/${roomId}`, {
-          headers: {
-            Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
-          },
-        });
-        const data = response.data.data;
-        setProductInfo({
-          productName: data.name,
-          productImage: data.productImageUrls?.[0] || "/default-image.png",
-        });
-      } catch (error) {
-        console.error("상품 정보 로드 에러:", error);
-      }
-    };
-
-    fetchProductInfo();
-    fetchMessages(); // 메시지 초기 로딩
-  }, [roomId, userInfo]);
 
   // WebSocket 연결 및 메시지 처리
   useEffect(() => {
@@ -279,20 +251,19 @@ const ChatDetail = () => {
     }
   };
 
-  const navigateToReviewPage = () => {
-    navigate(`/review/${roomId}`); // 리뷰 페이지로 이동
-  };
-
   return (
     <Container>
       <Header>채팅방</Header>
       <ProductInfoContainer>
-        <ProductImage src={productInfo.productImage} alt="상품 이미지" />
+        <ProductImage
+          src={ongoingProducts[0]?.image || "/default-image.png"} // 고정된 상품 이미지 사용
+          alt="상품 이미지"
+        />
         <div className="product-info">
-          <div className="product-name">{productInfo.productName}</div>
+          <div className="product-name">{ongoingProducts[0]?.productName}</div> {/* 고정된 상품 이름 사용 */}
         </div>
       </ProductInfoContainer>
-      <ReviewButton onClick={navigateToReviewPage}>리뷰쓰기</ReviewButton>
+      <ReviewButton onClick={() => navigate(`/review/${roomId}`)}>리뷰쓰기</ReviewButton>
       {loading ? (
         <Loading>Loading...</Loading>
       ) : (
