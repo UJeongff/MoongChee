@@ -548,6 +548,21 @@ const Product = () => {
     setChecklist((prev) => ({ ...prev, [name]: checked }));
   };
 
+  const saveProductToLocalStorage = () => {
+    if (product && product.productImageUrls && product.name && product.postId) {
+      const productData = {
+        imageUrl: product.productImageUrls[0],
+        name: product.name,
+        postId: product.postId,
+      };
+      localStorage.setItem("selectedProduct", JSON.stringify(productData));
+      alert("상품 정보가 로컬 스토리지에 저장되었습니다.");
+    } else {
+      alert("상품 정보를 저장할 수 없습니다.");
+    }
+  };
+  
+
   useEffect(() => {
     const fetchProduct = async () => {
       if (!userInfo?.jwtToken?.accessToken) return;
@@ -733,7 +748,11 @@ const Product = () => {
               <span className="empty-heart">🤍</span>
             )}
           </button>
+          <button className="save-btn" onClick={saveProductToLocalStorage}>
+            저장
+          </button>
         </ButtonContainer>
+
         <BackButton onClick={() => navigate("/")}>목록으로 돌아가기</BackButton>
       </ProductDetails>
       <Footer />
