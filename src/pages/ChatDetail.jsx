@@ -30,6 +30,40 @@ const Header = styled.header`
   border-bottom: 1px solid #ddd;
 `;
 
+const ProductInfoContainer = styled.div`
+  padding: 16px;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+
+  .product-info {
+    margin-left: 16px;
+
+    .product-name {
+      font-size: 16px;
+      font-weight: bold;
+    }
+  }
+`;
+
+const ProductImage = styled.img`
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+`;
+
+const ReviewButton = styled.button`
+  padding: 8px 12px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 12px;
+`;
+
 const ChatContent = styled.div`
   flex: 1;
   overflow-y: auto;
@@ -108,6 +142,10 @@ const ChatDetail = () => {
   const [reconnecting, setReconnecting] = useState(false);
   const [page, setPage] = useState(0); // 페이지 번호 상태
   const [size] = useState(40); // 페이지 당 메시지 수
+  const [productInfo, setProductInfo] = useState({
+    productName: "",
+    productImage: "",
+  });
 
   // 채팅 메시지 로딩
   const fetchMessages = async () => {
@@ -138,18 +176,32 @@ const ChatDetail = () => {
     }
   };
 
+  // 상품 정보 로딩
+  useEffect(() => {
+    const fetchProductInfo = async () => {
+      const apiUrl = "http://43.203.202.100:8080/api/v1";
+      try {
+        const response = await axios.get(`${apiUrl}/posts/${roomId}`, {
+          headers: {
+            Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
+          },
+        });
+        const data = response.data.data;
+        setProductInfo({
+          productName: data.name,
+          productImage: data.productImageUrls?.[0] || "/default-image.png",
+        });
+      } catch (error) {
+        console.error("상품 정보 로드 에러:", error);
+      }
+    };
+
+    fetchProductInfo();
+    fetchMessages(); // 메시지 초기 로딩
+  }, [roomId, userInfo]);
+
   // WebSocket 연결 및 메시지 처리
   useEffect(() => {
-    if (!roomId) {
-      console.log("roomId is missing, redirecting to chat list...");
-      navigate("/chat");
-      return;
-    }
-
-    // 메시지 초기 로딩
-    fetchMessages();
-
-    // WebSocket 연결 설정
     const stompClient = new Client({
       webSocketFactory: () => new SockJS("https://43.203.202.100.nip.io/ws"),
       connectHeaders: {
@@ -195,12 +247,7 @@ const ChatDetail = () => {
       console.log("WebSocket connection deactivating...");
       stompClient.deactivate();
     };
-  }, [roomId, userInfo, navigate, page, size]);
-
-  // 페이지가 변경될 때마다 메시지 새로 가져오기
-  const handlePageChange = (newPage) => {
-    setPage(newPage); // 페이지 번호 변경
-  };
+  }, [roomId, userInfo]);
 
   const sendMessage = () => {
     if (!client || !client.connected) {
@@ -232,9 +279,20 @@ const ChatDetail = () => {
     }
   };
 
+  const navigateToReviewPage = () => {
+    navigate(`/review/${roomId}`); // 리뷰 페이지로 이동
+  };
+
   return (
     <Container>
       <Header>채팅방</Header>
+      <ProductInfoContainer>
+        <ProductImage src={productInfo.productImage} alt="상품 이미지" />
+        <div className="product-info">
+          <div className="product-name">{productInfo.productName}</div>
+        </div>
+      </ProductInfoContainer>
+      <ReviewButton onClick={navigateToReviewPage}>리뷰쓰기</ReviewButton>
       {loading ? (
         <Loading>Loading...</Loading>
       ) : (
