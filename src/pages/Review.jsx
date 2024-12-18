@@ -121,7 +121,7 @@ const Review = () => {
       }
 
       try {
-        const apiUrl = "http://43.203.202.100:8080/api/v1";
+        const apiUrl = "https://43.203.202.100:8080/api/v1";
         const response = await axios.get(`${apiUrl}/posts/${productId}`, {
           headers: {
             Authorization: `Bearer ${userInfo?.jwtToken?.accessToken}`,
