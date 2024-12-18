@@ -382,7 +382,7 @@ const Product = () => {
       if (!product?.userId || !userInfo?.jwtToken?.accessToken) return;
   
       try {
-        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100:8080";
         const response = await axios.get(`${apiUrl}/api/v1/reviews/user/${product.userId}`, {
           headers: {
             Authorization: `Bearer ${userInfo.jwtToken.accessToken}`,
@@ -407,7 +407,7 @@ const Product = () => {
       try {
         const apiUrl =
           import.meta.env.VITE_REACT_APP_API_URL ||
-          "http://43.203.202.100:8080";
+          "https://43.203.202.100:8080";
         const response = await axios.get(
           `${apiUrl}/api/v1/profile/my-like-posts`,
           {
@@ -445,7 +445,7 @@ const Product = () => {
 
     try {
       const apiUrl =
-        import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+        import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100:8080";
       const url = `${apiUrl}/api/v1/posts/like/${product.postId}`;
 
       if (isFavorite) {
@@ -553,7 +553,7 @@ const Product = () => {
       if (!userInfo?.jwtToken?.accessToken) return;
   
       try {
-        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "http://43.203.202.100:8080";
+        const apiUrl = import.meta.env.VITE_REACT_APP_API_URL || "https://43.203.202.100:8080";
         const response = await fetch(`${apiUrl}/api/v1/posts/${id}`, {
           headers: {
             Authorization: `Bearer ${userInfo.jwtToken.accessToken}`,
